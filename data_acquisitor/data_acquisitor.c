@@ -255,7 +255,9 @@ void* threadReceiveConnection(void* arg) {
 			if (fp == NULL) {
 				dieWithError("threadReceiveConnection fopen() failed");	
 			}
-			fprintf(fp, "%d %d", ntohs(buffer[0]), ntohs(buffer[1]));
+			for (i = 0; i < DATASIZE; i++) {
+				fprintf(fp, "%d ", ntohs(buffer[i]));
+			}
 			fclose(fp);
 
 			/*
