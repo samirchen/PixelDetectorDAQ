@@ -10,12 +10,23 @@
 #include "../common/cpuUsage.h"
 
 /* ######################## Local Global Data Structure ######################## */
+// ================== Const =================
 #define MAXPENDING 5
 #define DATASIZE (20*20)
 //#define RCVBUFSIZE (400*400)
-#define SERVPORT 5555
+//#define SERVPORT 5555
 
+// ================== Paramerters when using ==================
+struct PARAS {
+	// Server.
+	unsigned short serverPort;
+
+} Paras;
+
+
+// ================== Global ==================
 int Data_Buffer[DATASIZE];
+
 
 
 // [ ConnectionSockPool
@@ -83,6 +94,8 @@ float calThreadCPUUse(ProcStat* ps1, ProcPidStat* pps1, ProcStat* ps2, ProcPidSt
 
 
 // ================= In this file. ====================
+void printUsage();
+
 // Could accept multiple connections, but only able to deal with them one by one. 
 void recvMultiConnsDataOneByOne();
 
@@ -101,8 +114,25 @@ void recvMultiConnsDataWithMultiThreads();
 
 
 /* ######################## Method Implement ######################## */
-int main() {
-	printf("Hello!\n");
+int main(int argc, char* argv[]) {
+
+	// Default parameter values.
+	Paras.serverPort = 5555;
+	// Get parameters from inputing.
+	int i = 1;
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "-p") == 0) {
+			i++;
+			Paras.serverPort = atoi(argv[i]);
+		}
+		else if (strcmp(argv[i], "--help") == 0) {
+			printUsage();
+			return 0;
+		}
+		else {
+
+		}
+	}
 
 	//recvMultiConnsDataOneByOne();	
 	recvMultiConnsDataWithMultiThreads();
@@ -110,6 +140,10 @@ int main() {
 	return 0;
 }
 
+void printUsage() {
+	printf("Usage:\n");
+    printf("    exe.o -p serverPort");
+}
 
 // Get thread id.
 pid_t gettid() {
@@ -314,7 +348,7 @@ void* threadReceiveConnection(void* arg) {
 // Could accept multiple connections, and deal with them in different threads.
 void recvMultiConnsDataWithMultiThreads() {
 	printf("recvMultiConnsDataWithMultiThreads\n");
-    unsigned short servPort = SERVPORT;
+    unsigned short servPort = Paras.serverPort;//SERVPORT;
 
 	int listenSock, connectionSock; // Listen on listenSock, new connection on connectionSock.
     struct sockaddr_in servAddr; // Server address info.
@@ -426,7 +460,7 @@ void recvMultiConnsDataOneByOne() {
 	struct sockaddr_in clntAddr; // Client address.
 	unsigned int clntLen; // Length of client address data structure.
 
-	unsigned short servPort = SERVPORT;
+	unsigned short servPort = Paras.serverPort;//SERVPORT;
 	printf("server port: %d\n", servPort);
 
 	// Create socket for incoming connections.

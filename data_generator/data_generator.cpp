@@ -13,16 +13,28 @@
 #include "../common/cpuUsage.h"
 using namespace std;
 
+/* ######################## Local Global Data Structure ######################## */
+// ================= Const =================
 #define PIXEL_MATRIX_WIDTH 15//400
 #define PIXEL_MATRIX_HEIGHT 15//400
 
 #define MAX_VALUE 2097151 // 2^21-1 
 
-#define SERVPORT 5555
-#define SERVIP "192.168.37.229"
+//#define SERVPORT 5555
+//#define SERVIP "192.168.37.229"
 //#define PKGSIZE 32
 //#define INTERVAL 10
 
+
+// ================== Parameters when using ==================
+struct PARAS {
+	// Server.
+	char* serverIP;
+	unsigned short serverPort;
+
+} Paras;
+
+// ================== Global ==================
 int Pixel_Matrix[PIXEL_MATRIX_HEIGHT*PIXEL_MATRIX_WIDTH];
 
 
@@ -41,13 +53,40 @@ float calProcessCPUUse(ProcStat* ps1, ProcPidStat* pps1, ProcStat* ps2, ProcPidS
 void getThreadCPUStatus(ProcPidStat* pps, pid_t pid, pid_t tid);
 float calThreadCPUUse(ProcStat* ps1, ProcPidStat* pps1, ProcStat* ps2, ProcPidStat* pps2);
 
+
+// ================= In this file. ====================
 // Method Declare.
+void printUsage();
 void genData();
 void sendData();
 
-int main() {
+int main(int argc, char* argv[]) {
 
-	int i = numeric_limits<int>::max();
+	// Default parameter values.
+	Paras.serverIP = (char*) "127.0.0.1";
+	Paras.serverPort = 5555;
+	// Get paramerters from inputing.
+	int i = 1;
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "-s") == 0) {
+			i++;
+			Paras.serverIP = argv[i];
+		}
+		else if (strcmp(argv[i], "-p") == 0) {
+			i++;
+			Paras.serverPort = atoi(argv[i]);
+		}
+		else if (strcmp(argv[i], "--help") == 0) {
+			printUsage();
+			return 0;
+		}
+		else {
+
+		}
+	}
+
+
+	//int i = numeric_limits<int>::max();
 	//printf("max int: %d\n", i);
 
 	genData();
@@ -57,6 +96,10 @@ int main() {
 	return 0;
 }
 
+void printUsage() {
+	printf("Usage:\n");
+	printf("    exe.o -s serverIP -p serverPort");
+}
 
 void genData() {
 	srand((unsigned) time(NULL));
@@ -72,8 +115,8 @@ void sendData() {
 	struct sockaddr_in servAddr; // Server address.
 	//char* package;
 
-	unsigned short servPort = SERVPORT;
-	const char* servIP = SERVIP;
+	unsigned short servPort = Paras.serverPort;//SERVPORT;
+	const char* servIP = Paras.serverIP;//SERVIP;
 	//unsigned int pkgSize = PKGSIZE;;
 	//unsigned int interval = INTERVAL;
 
