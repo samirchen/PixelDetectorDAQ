@@ -7,10 +7,10 @@ tiff_util.o: cpuUsage.o tiff_util.cpp
 	g++ -c tiff_util.cpp
 
 cpuUsage.o: dieWithError.o ../common/cpuUsage.h ../common/cpuUsage.c
-	g++ -c ../common/cpuUsage.c
+	gcc -c ../common/cpuUsage.c
 
 dieWithError.o: ../common/dieWithError.h ../common/dieWithError.c
-	g++ -c ../common/dieWithError.c
+	gcc -c ../common/dieWithError.c
 
 clean:
 	rm -rf exe.o
