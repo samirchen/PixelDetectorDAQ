@@ -1,10 +1,10 @@
 objects = dieWithError.o cpuUsage.o tiff_util.o
 main: $(objects)
-	g++ -g $(objects) -o exe.o
+	gcc -g $(objects) -o exe.o
 	rm -rf $(objects)
 
-tiff_util.o: cpuUsage.o tiff_util.cpp
-	g++ -c tiff_util.cpp
+tiff_util.o: cpuUsage.o tiff_util.c
+	gcc -c tiff_util.c
 
 cpuUsage.o: dieWithError.o ../common/cpuUsage.h ../common/cpuUsage.c
 	gcc -c ../common/cpuUsage.c
