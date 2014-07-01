@@ -20,6 +20,8 @@ void getThreadCPUStatus(ProcPidStat* pps, pid_t pid, pid_t tid);
 float calThreadCPUUse(ProcStat* ps1, ProcPidStat* pps1, ProcStat* ps2, ProcPidStat* pps2);
 
 
+// ================= In this file. ================
+void writePixelsDataToTIFF();
 
 int main() {
 	printf("Hello\n");
@@ -27,13 +29,12 @@ int main() {
 	const char* fileName = "out.txt";
 	FILE* fp = fopen(fileName, "wb");
 
-	int i = 10;
+	int i = 0x4949;
 	char* str = "test";
 	size_t len = strlen(str);
 
 	fwrite(&i, sizeof(int), 1, fp);
-	fwrite(str, sizeof(char), len, fp);
-
+	//fwrite(str, sizeof(char), len, fp);
 	fclose(fp);
 
 	fp = fopen(fileName, "rb");
@@ -45,7 +46,12 @@ int main() {
 	printf("%d\n", k);
 	fread(buf, sizeof(char), 1024, fp);
 	printf("%s\n", buf);
+	fclose(fp);
 
 
 	return 0;
+}
+
+void writePixelsDataToTIFF() {
+
 }
