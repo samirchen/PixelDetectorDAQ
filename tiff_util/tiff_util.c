@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../common/dieWithError.h"
-#include "../common/cpuUsage.h"
+//#include "../common/dieWithError.h"
+//#include "../common/cpuUsage.h"
 
 // ================== Macros ====================
 // little-endian to big-endian or big-endian to little-endian.
@@ -70,6 +70,7 @@ struct PARAS {
 
 
 /* ######################## Method Declare ######################## */
+/*
 // ================= Out of this file. ================
 // In "dieWithError.c".
 void dieWithError(const char *errorMessage);
@@ -83,6 +84,7 @@ float calProcessCPUUse(ProcStat* ps1, ProcPidStat* pps1, ProcStat* ps2, ProcPidS
 // Thread "/proc/<pid>/task/<tid>" has the same data structure as process, ProcPidStat.
 void getThreadCPUStatus(ProcPidStat* pps, pid_t pid, pid_t tid);
 float calThreadCPUUse(ProcStat* ps1, ProcPidStat* pps1, ProcStat* ps2, ProcPidStat* pps2);
+*/
 
 
 // ================= In this file. ================

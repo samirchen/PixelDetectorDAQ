@@ -1,0 +1,10 @@
+objects = tiff_util.o
+main: $(objects)
+	gcc -g $(objects) -o exe.o
+	rm -rf $(objects)
+
+tiff_util.o: tiff_util.c
+	gcc -c tiff_util.c
+
+clean:
+	rm -rf exe.o
