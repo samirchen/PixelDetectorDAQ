@@ -14,7 +14,7 @@ int main() {
     size_t len = strlen(str);
 
     fwrite(&i, sizeof(int), 1, fp);
-    //fwrite(str, sizeof(char), len, fp);
+    fwrite(str, sizeof(char), len, fp);
     fclose(fp);
 
     fp = fopen(fileName, "rb");
