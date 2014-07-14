@@ -117,6 +117,7 @@ int main() {
 	firstIFD.numOfDirEntities = 0x11;
 	firstIFD.entities = malloc(firstIFD.numOfDirEntities*sizeof(IFDEntity)); // Cannot replace "sizeof(IFDEntity)" with "LDirEntity".
 	// TO BE CONTINUE... Set IFD.
+	
 	firstIFD.nextIFDOffset = 0x0;
 	
 
