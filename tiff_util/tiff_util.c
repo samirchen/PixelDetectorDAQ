@@ -7,9 +7,29 @@
 // ================== Macros ====================
 // little-endian to big-endian or big-endian to little-endian.
 #define switch16(x) ( (short) ( (((short)(x) & (short)0x00ffU) << 8) | (((short)(x) & (short)0xff00U) >> 8) ) )
+#define switch24(x) ( ( (((x) & 0x0000ffU) << 16) | ((x) & 0x00ff00U ) | (((x) & 0xff0000U) >> 16) ) )
 #define switch32(x) ( (long) ( ((long)(x) & (long)0x000000ffU) << 24  ) | ( ((long)(x) & (long)0x0000ff00U) << 8  ) | (((long)(x) & (long)0x00ff0000U) >> 8) | (((long)(x) & (long)0xff000000U) >> 24) )
 
 // ================== Consts when using ==================
+// Normal IFD index.
+#define ENIndexSubfileType 0
+#define ENIndexImageWidth 1
+#define ENIndexImageHeight 2
+#define ENIndexBitsPerSample 3
+#define ENIndexCompression 4
+#define ENIndexPhotometricInterpretation 5
+#define ENIndexImageDescription 6
+#define ENIndexModel 7
+#define ENIndexStripOffsets 8
+#define ENIndexRowsPerStrip 9
+#define ENIndexStripByteCounts 10
+#define ENIndexXResolution 11
+#define ENIndexYResolution 12
+#define ENIndexSoftware 13
+#define ENIndexDateTime 14
+#define ENIndexArtist 15
+#define ENIndexSampleFormat 16
+
 // Normal IFD tags.
 #define ENTagSubfileType 0xFE
 #define ENTagImageWidth 0x100
@@ -45,15 +65,14 @@
 #define LDateTime 32
 #define LModel 48
 #define LSoftware 20
+#define LImageDescription 488
 
 #define LNumOfDirEntities 2
-
 #define LDirEntity 12
 #define LDirEntityTag 2
 #define LDirEntityType 2
 #define LDirEntityCount 4
 #define LDirEntityValueOrOffset 4
-
 #define LNextIFDOffset 4
 
 
@@ -81,15 +100,23 @@ struct PARAS {
 	short version; // 2-3, 2 bytes.
 	long firstIFDOffset; // 4-7, 4 bytes.
 
-	// Info.
+
+	// IFD.
+	IFD ifd; // 1 IFD.
+	//// Some IFD entities value.
+	long width;
+	long height;
+	short bitsPerSample;
+	long stripOffset;
 	char* artist; // 18 bytes.
 	char* datetime; // 32 bytes.
 	char* model; // 48 bytes.
 	char* software; // 20 bytes.
-
-	// IFD.
-	IFD ifd; // 1 IFD.
-	
+	long xResolutionA; // 4 bytes.
+	long xResolutionB; // 4 bytes.
+	long yResolutionA; // 4 bytes.
+	long yResolutionB; // 4 bytes.
+	char* imageDescription; // 488 bytes.
 
 
 } Paras;
@@ -117,6 +144,7 @@ float calThreadCPUUse(ProcStat* ps1, ProcPidStat* pps1, ProcStat* ps2, ProcPidSt
 // Utility.
 void fill(char value, int count, FILE* fp);
 void writeStr(char* str, int limitLen, FILE* fp);
+void writeInteger(long i, int len, FILE* fp);
 void writePixelsDataToTIFF();
 void test();
 
@@ -130,13 +158,23 @@ int main() {
 	//test();
 	
 	// Set parameters.
-	Paras.isLittleEndian = 1;
+	Paras.isLittleEndian = 0;
 	Paras.version = 0x2A;
 	Paras.firstIFDOffset = 0x82;
+
+	Paras.width = 10;
+	Paras.height = 10;
+	Paras.bitsPerSample = 32;
+	Paras.stripOffset = 2048;
 	Paras.artist = "artist";
 	Paras.datetime = "2014:07:07 22:30:23";
 	Paras.model = "model";
 	Paras.software = "software";
+	Paras.xResolutionA = 1043;
+	Paras.xResolutionB = 7;
+	Paras.yResolutionA = 1043;
+	Paras.yResolutionB = 7;
+	Paras.imageDescription = "image description";
 
 	//// IFD.
 	IFD firstIFD;
@@ -149,119 +187,119 @@ int main() {
 	enSubfileType.type = ENTypeLong;
 	enSubfileType.count = 0x01;
 	enSubfileType.valueOrOffset = 0x00;
-	firstIFD.entities[0] = enSubfileType;
+	firstIFD.entities[ENIndexSubfileType] = enSubfileType;
 	// 2.
 	IFDEntity enImageWidth;
 	enImageWidth.tag = ENTagImageWidth;
 	enImageWidth.type = ENTypeLong;
 	enImageWidth.count = 0x01;
-	enImageWidth.valueOrOffset = 0x3D5;
-	firstIFD.entities[1] = enImageWidth;
+	enImageWidth.valueOrOffset = Paras.width;
+	firstIFD.entities[ENIndexImageWidth] = enImageWidth;
 	// 3.
 	IFDEntity enImageHeight;
 	enImageHeight.tag = ENTagImageHeight;
 	enImageHeight.type = ENTypeLong;
 	enImageHeight.count = 0x01;
-	enImageHeight.valueOrOffset = 0x413;
-	firstIFD.entities[2] = enImageHeight;
+	enImageHeight.valueOrOffset = Paras.height;
+	firstIFD.entities[ENIndexImageHeight] = enImageHeight;
 	// 4.
 	IFDEntity enBitsPerSample;
 	enBitsPerSample.tag = ENTagBitsPerSample;
 	enBitsPerSample.type = ENTypeShort;
 	enBitsPerSample.count = 0x01;
-	enBitsPerSample.valueOrOffset = 0x20;
-	firstIFD.entities[3] = enBitsPerSample;
+	enBitsPerSample.valueOrOffset = Paras.bitsPerSample;
+	firstIFD.entities[ENIndexBitsPerSample] = enBitsPerSample;
 	// 5.
 	IFDEntity enCompression;
 	enCompression.tag = ENTagCompression;
 	enCompression.type = ENTypeShort;
 	enCompression.count = 0x01;
 	enCompression.valueOrOffset = 0x01;
-	firstIFD.entities[4] = enCompression;
+	firstIFD.entities[ENIndexCompression] = enCompression;
 	// 6.
 	IFDEntity enPhotometricInterpretation;
 	enPhotometricInterpretation.tag = ENTagPhotometricInterpretation;
 	enPhotometricInterpretation.type = ENTypeShort;
 	enPhotometricInterpretation.count = 0x01;
 	enPhotometricInterpretation.valueOrOffset = 0x01;
-	firstIFD.entities[5] = enPhotometricInterpretation;
+	firstIFD.entities[ENIndexPhotometricInterpretation] = enPhotometricInterpretation;
 	// 7.
 	IFDEntity enImageDescription;
 	enImageDescription.tag = ENTagImageDescription;
 	enImageDescription.type = ENTypeASCII;
 	enImageDescription.count = 0x1E8;
 	enImageDescription.valueOrOffset = 0x190;
-	firstIFD.entities[6] = enImageDescription;
+	firstIFD.entities[ENIndexImageDescription] = enImageDescription;
 	// 8.
 	IFDEntity enModel;
 	enModel.tag = ENTagModel;
 	enModel.type = ENTypeASCII;
 	enModel.count = 0x30;
 	enModel.valueOrOffset = 0x3E;
-	firstIFD.entities[7] = enModel;
+	firstIFD.entities[ENIndexModel] = enModel;
 	// 9.
 	IFDEntity enStripOffsets;
 	enStripOffsets.tag = ENTagStripOffsets;
 	enStripOffsets.type = ENTypeLong;
 	enStripOffsets.count = 0x01;
-	enStripOffsets.valueOrOffset = 0x800;
-	firstIFD.entities[8] = enStripOffsets;
+	enStripOffsets.valueOrOffset = Paras.stripOffset;
+	firstIFD.entities[ENIndexStripOffsets] = enStripOffsets;
 	// 10.
 	IFDEntity enRowsPerStrip;
 	enRowsPerStrip.tag = ENTagRowsPerStrip;
 	enRowsPerStrip.type = ENTypeLong;
 	enRowsPerStrip.count = 0x01;
 	enRowsPerStrip.valueOrOffset = 0x413;
-	firstIFD.entities[9] = enRowsPerStrip;
+	firstIFD.entities[ENIndexRowsPerStrip] = enRowsPerStrip;
 	// 11.
 	IFDEntity enStripByteCounts;
 	enStripByteCounts.tag = ENTagStripByteCounts;
 	enStripByteCounts.type = ENTypeLong;
 	enStripByteCounts.count = 0x01;
-	enStripByteCounts.valueOrOffset = 0x3E733C;
-	firstIFD.entities[10] = enStripByteCounts;
+	enStripByteCounts.valueOrOffset = Paras.bitsPerSample/8 * Paras.width * Paras.height;
+	firstIFD.entities[ENIndexStripByteCounts] = enStripByteCounts;
 	// 12.
 	IFDEntity enXResolution;
 	enXResolution.tag = ENTagXResolution;
 	enXResolution.type = ENTypeRational;
 	enXResolution.count = 0x01;
 	enXResolution.valueOrOffset = 0x154;
-	firstIFD.entities[11] = enXResolution;
+	firstIFD.entities[ENIndexXResolution] = enXResolution;
 	// 13.
 	IFDEntity enYResolution;
 	enYResolution.tag = ENTagYResolution;
 	enYResolution.type = ENTypeRational;
 	enYResolution.count = 0x01;
 	enYResolution.valueOrOffset = 0x15C;
-	firstIFD.entities[12] = enYResolution;
+	firstIFD.entities[ENIndexYResolution] = enYResolution;
 	// 14.
 	IFDEntity enSoftware;
 	enSoftware.tag = ENTagSoftware;
 	enSoftware.type = ENTypeASCII;
 	enSoftware.count = 0x14;
 	enSoftware.valueOrOffset = 0x6E;
-	firstIFD.entities[13] = enSoftware;
+	firstIFD.entities[ENIndexSoftware] = enSoftware;
 	// 15.
 	IFDEntity enDateTime;
 	enDateTime.tag = ENTagDateTime;
 	enDateTime.type = ENTypeASCII;
 	enDateTime.count = 0x20;
 	enDateTime.valueOrOffset = 0x1E;
-	firstIFD.entities[14] = enDateTime;
+	firstIFD.entities[ENIndexDateTime] = enDateTime;
 	// 16.
 	IFDEntity enArtist;
 	enArtist.tag = ENTagArtist;
 	enArtist.type = ENTypeASCII;
 	enArtist.count = 0x12;
 	enArtist.valueOrOffset = 0x0C;
-	firstIFD.entities[15] = enArtist;
+	firstIFD.entities[ENIndexArtist] = enArtist;
 	// 17.
 	IFDEntity enSampleFormat;
 	enSampleFormat.tag = ENTagSampleFormat;
 	enSampleFormat.type = ENTypeShort;
 	enSampleFormat.count = 0x01;
 	enSampleFormat.valueOrOffset = 0x020002;
-	firstIFD.entities[16] = enSampleFormat;
+	firstIFD.entities[ENIndexSampleFormat] = enSampleFormat;
 	// Next IFD offset or 0 if none.
 	firstIFD.nextIFDOffset = 0x0;
 	Paras.ifd = firstIFD;
@@ -320,6 +358,34 @@ void writeStr(char* str, int limitLen, FILE* fp) {
 	}
 }
 
+void writeInteger(long i, int len, FILE* fp) {
+	if (len < 1 || len > 4) {
+		perror("Not support integer.");
+		exit(1);
+	}
+	else {
+
+		if (!Paras.isLittleEndian) {
+			if (len == 1) {
+			
+			}
+			else if (len == 2) {
+				i = switch16(i);
+			}
+			else if (len == 3) {
+				i = switch24(i);
+			}
+			else if (len == 4) {
+				i = switch32(i);
+			}
+		}
+
+		fwrite(&i, len, 1, fp);
+	}
+	
+	
+}
+
 void writePixelsDataToTIFF() {
 
 	const char* fileName = "sample.tif";
@@ -335,13 +401,16 @@ void writePixelsDataToTIFF() {
 	else {
 		byteOrder = 0x4D4D;
 	}
-	fwrite(&byteOrder, LByteOrder, 1, fp);
+	//fwrite(&byteOrder, LByteOrder, 1, fp);
+	writeInteger(byteOrder, LByteOrder, fp);
 
 	// Version. 2-3, 2 bytes.
-	fwrite(&Paras.version, LVersion, 1, fp);
+	//fwrite(&Paras.version, LVersion, 1, fp);
+	writeInteger(Paras.version, LVersion, fp);
 
 	// First IFD offset. 4-7, 4 bytes.
-	fwrite(&Paras.firstIFDOffset, LFirstIFDOffset, 1, fp);  
+	//fwrite(&Paras.firstIFDOffset, LFirstIFDOffset, 1, fp);  
+	writeInteger(Paras.firstIFDOffset, LFirstIFDOffset, fp);
 
 	// ======= Info ========
 	// Fill 0. 8-11, 4 bytes.
@@ -362,34 +431,37 @@ void writePixelsDataToTIFF() {
 
 	// ====== IFD ======
 	// IFD. 130-339, 210 bytes.
-	fwrite(&Paras.ifd.numOfDirEntities, LNumOfDirEntities, 1, fp);
+	writeInteger(Paras.ifd.numOfDirEntities, LNumOfDirEntities, fp);
 	int i = 0;
 	for (i = 0; i < Paras.ifd.numOfDirEntities; ++i) {
 		IFDEntity en = Paras.ifd.entities[i];
-		fwrite(&en.tag, LDirEntityTag, 1, fp);
-		fwrite(&en.type, LDirEntityType, 1, fp);
-		fwrite(&en.count, LDirEntityCount, 1, fp);
-		fwrite(&en.valueOrOffset, LDirEntityValueOrOffset, 1, fp);
+		writeInteger(en.tag, LDirEntityTag, fp);
+		writeInteger(en.type, LDirEntityType, fp);
+		writeInteger(en.count, LDirEntityCount, fp);
+		writeInteger(en.valueOrOffset, LDirEntityValueOrOffset, fp);
 	}
-	fwrite(&Paras.ifd.nextIFDOffset, LNextIFDOffset, 1, fp);
+	writeInteger(Paras.ifd.nextIFDOffset, LNextIFDOffset, fp);
 
 	// XResolution. 340-347, 8 bytes.
-	// ...
-
-	// YResolution. 348-355, 8 bytes.
-	// ...
+	writeInteger(Paras.xResolutionA, 4, fp);
+	writeInteger(Paras.xResolutionB, 4, fp);
+	// YResolution. 340-347, 8 bytes.
+	writeInteger(Paras.yResolutionA, 4, fp);
+	writeInteger(Paras.yResolutionB, 4, fp);
 
 	// Fill 0. 356-399, 44 bytes.
 	fill(0x00, 44, fp);
 
 	// ImageDescription.
-	// ...
+	writeStr(Paras.imageDescription, LImageDescription, fp);
 	
 	// Fill 0. 400-887, 488 bytes.
 	fill(0x00, 488, fp);
 
 	// Image Data.
-	// ...
+	for (i = 0; i < Paras.width*Paras.height; i++) {
+		writeInteger(i, Paras.bitsPerSample/8, fp);
+	}
 
 	fclose(fp);
 
