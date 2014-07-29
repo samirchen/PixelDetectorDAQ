@@ -152,12 +152,7 @@ void readTIFFPixelsData();
 void test();
 
 int main() {
-	printf("Hello\n");
-
-	char* str = "abc";
-	size_t len = strlen(str);
-	printf("%zu\n", len);
-
+	
 	//test();
 	
 	//prepareAndWrite();
@@ -168,6 +163,11 @@ int main() {
 }
 
 void test() {
+
+	printf("Hello\n");
+	char* str = "abc";
+	size_t len = strlen(str);
+	printf("%zu\n", len);
 
 	const char* fileName = "out.txt";
 	FILE* fp = fopen(fileName, "wb");
@@ -503,45 +503,65 @@ void readTIFFPixelsData() {
 	}
 
 	// First IFD offset. 4-7, 4 bytes.
-	fseek(fp, LByteOrder+LVersion, 0);
+	fseek(fp, LByteOrder+LVersion, SEEK_SET);
 	fread(&Paras.firstIFDOffset, LFirstIFDOffset, 1, fp);
 	printf("First IFD Offset: %ld\n", Paras.firstIFDOffset);
 
-
+	// IFD info.
+	// Number of entities. 2 bytes.
+	fseek(fp, Paras.firstIFDOffset, SEEK_SET);
+	fread(&Paras.ifd.numOfDirEntities, LNumOfDirEntities, 1, fp);
+	printf("Number of IFD entities: %d\n", Paras.ifd.numOfDirEntities);
 	// Get image width, image height, bits per sample and strip offset info from IFD.
-	// ...
+	int i = 0;
+	for (i = 0; i < Paras.ifd.numOfDirEntities; i++) {
+		int tag = 0;
+		fread(&tag, LDirEntityTag, 1, fp);
 
-	/* Test
-	// Image width.
-	fseek(fp, 144+LDirEntityTag+LDirEntityType+LDirEntityCount, 0);
-	fread(&Paras.width, LDirEntityValueOrOffset, 1, fp);
+		long value = 0;
+		if (tag == ENTagImageWidth) {
+			fseek(fp, LDirEntityType+LDirEntityCount, SEEK_CUR);
+			fread(&value, LDirEntityValueOrOffset, 1, fp);
+			Paras.width = value;
+		}
+		else if (tag == ENTagImageHeight) {
+			fseek(fp, LDirEntityType+LDirEntityCount, SEEK_CUR);
+			fread(&value, LDirEntityValueOrOffset, 1, fp);
+			Paras.height = value;
+		}
+		else if (tag == ENTagBitsPerSample) {
+			fseek(fp, LDirEntityType+LDirEntityCount, SEEK_CUR);
+			fread(&value, LDirEntityValueOrOffset, 1, fp);
+			Paras.bitsPerSample = value;
+		}
+		else if (tag == ENTagStripOffsets) {
+			fseek(fp, LDirEntityType+LDirEntityCount, SEEK_CUR);
+			fread(&value, LDirEntityValueOrOffset, 1, fp);
+			Paras.stripOffset = value;
+		}
+		else {
+			fseek(fp, LDirEntityType+LDirEntityCount+LDirEntityValueOrOffset, SEEK_CUR);
+		}
+	}
 	printf("Image Width: %ld\n", Paras.width);
-
-	// Image height.
-	fseek(fp, 156+LDirEntityTag+LDirEntityType+LDirEntityCount, 0);
-	fread(&Paras.height, LDirEntityValueOrOffset, 1, fp);
 	printf("Image Height: %ld\n", Paras.height);
-
-	// Bits per sample.
-	fseek(fp, 168+LDirEntityTag+LDirEntityType+LDirEntityCount, 0);
-	fread(&Paras.bitsPerSample, LDirEntityValueOrOffset, 1, fp);
 	printf("Bits Per Sample: %d\n", Paras.bitsPerSample);
-
-	// Strip offset.
-	fseek(fp, 228+LDirEntityTag+LDirEntityType+LDirEntityCount, 0);
-	fread(&Paras.stripOffset, LDirEntityValueOrOffset, 1, fp);
 	printf("Strip Offset: %ld\n", Paras.stripOffset);
-	*/
+
 
 	// Get pixels data.
-	// ...
+	fseek(fp, Paras.stripOffset, SEEK_SET);
+	long* data = malloc(sizeof(long) * Paras.width * Paras.height);
+	for (i = 0; i < Paras.width*Paras.height; i++) {
+		long value = 0;
+		fread(&value, Paras.bitsPerSample/8, 1, fp);
+		data[i] = value;
+		printf("%ld ", data[i]);
+	}
+	printf("\n");
 
-	/* Test
-	int i;
-	fseek(fp, Paras.stripOffset, 0);
-	fread(&i, Paras.bitsPerSample/8, 1, fp);
-	printf("Data[0]: %d\n", i);
-	*/
+	free(data);
+
 	
 	fclose(fp);
 
