@@ -145,7 +145,10 @@ float calThreadCPUUse(ProcStat* ps1, ProcPidStat* pps1, ProcStat* ps2, ProcPidSt
 void fill(char value, int count, FILE* fp);
 void writeStr(char* str, int limitLen, FILE* fp);
 void writeInteger(long i, int len, FILE* fp);
+void prepareAndWrite();
 void writePixelsDataToTIFF();
+void prepareAndRead();
+void readTIFFPixelsData();
 void test();
 
 int main() {
@@ -157,8 +160,90 @@ int main() {
 
 	//test();
 	
+	//prepareAndWrite();
+
+	prepareAndRead();
+
+	return 0;
+}
+
+void test() {
+
+	const char* fileName = "out.txt";
+	FILE* fp = fopen(fileName, "wb");
+
+	int i = switch32(0x12345678);
+	char* str = "test";
+	size_t len = strlen(str);
+
+	fwrite(&i, sizeof(int), 1, fp);
+	fwrite(str, sizeof(char), len, fp);
+	fclose(fp);
+
+	fp = fopen(fileName, "rb");
+	int k = 0;
+	char buf[1024];
+	bzero(buf, 1024);
+
+	fread(&k, sizeof(int), 1, fp);
+	printf("%d\n", k);
+	fread(buf, sizeof(char), 1024, fp);
+	printf("%s\n", buf);
+	fclose(fp);
+
+}
+
+
+void fill(char value, int count, FILE* fp) {
+	int i = 0;
+	for (i = 0; i < count; i++) {
+		fwrite(&value, 1, 1, fp);
+	}
+}
+
+void writeStr(char* str, int limitLen, FILE* fp) {
+	size_t strLen = strlen(str);
+	if (strLen < limitLen) {
+		fwrite(str, 1, strLen, fp);
+		fill(0x00, limitLen-strLen, fp);
+	}
+	else {
+		fwrite(str, 1, limitLen, fp);
+	}
+}
+
+void writeInteger(long i, int len, FILE* fp) {
+	if (len < 1 || len > 4) {
+		perror("Not compatible integer.");
+		exit(1);
+	}
+	else {
+
+		if (!Paras.isLittleEndian) {
+			if (len == 1) {
+			
+			}
+			else if (len == 2) {
+				i = switch16(i);
+			}
+			else if (len == 3) {
+				i = switch24(i);
+			}
+			else if (len == 4) {
+				i = switch32(i);
+			}
+		}
+
+		fwrite(&i, len, 1, fp);
+	}
+	
+	
+}
+
+void prepareAndWrite() {
+
 	// Set parameters.
-	Paras.isLittleEndian = 0;
+	Paras.isLittleEndian = 1;
 	Paras.version = 0x2A;
 	Paras.firstIFDOffset = 0x82;
 
@@ -310,80 +395,6 @@ int main() {
 	// Clear.
 	free(firstIFD.entities);
 
-	return 0;
-}
-
-void test() {
-
-	const char* fileName = "out.txt";
-	FILE* fp = fopen(fileName, "wb");
-
-	int i = switch32(0x12345678);
-	char* str = "test";
-	size_t len = strlen(str);
-
-	fwrite(&i, sizeof(int), 1, fp);
-	fwrite(str, sizeof(char), len, fp);
-	fclose(fp);
-
-	fp = fopen(fileName, "rb");
-	int k = 0;
-	char buf[1024];
-	bzero(buf, 1024);
-
-	fread(&k, sizeof(int), 1, fp);
-	printf("%d\n", k);
-	fread(buf, sizeof(char), 1024, fp);
-	printf("%s\n", buf);
-	fclose(fp);
-
-}
-
-
-void fill(char value, int count, FILE* fp) {
-	int i = 0;
-	for (i = 0; i < count; i++) {
-		fwrite(&value, 1, 1, fp);
-	}
-}
-
-void writeStr(char* str, int limitLen, FILE* fp) {
-	size_t strLen = strlen(str);
-	if (strLen < limitLen) {
-		fwrite(str, 1, strLen, fp);
-		fill(0x00, limitLen-strLen, fp);
-	}
-	else {
-		fwrite(str, 1, limitLen, fp);
-	}
-}
-
-void writeInteger(long i, int len, FILE* fp) {
-	if (len < 1 || len > 4) {
-		perror("Not support integer.");
-		exit(1);
-	}
-	else {
-
-		if (!Paras.isLittleEndian) {
-			if (len == 1) {
-			
-			}
-			else if (len == 2) {
-				i = switch16(i);
-			}
-			else if (len == 3) {
-				i = switch24(i);
-			}
-			else if (len == 4) {
-				i = switch32(i);
-			}
-		}
-
-		fwrite(&i, len, 1, fp);
-	}
-	
-	
 }
 
 void writePixelsDataToTIFF() {
@@ -452,11 +463,11 @@ void writePixelsDataToTIFF() {
 	// Fill 0. 356-399, 44 bytes.
 	fill(0x00, 44, fp);
 
-	// ImageDescription.
+	// ImageDescription. 400-887, 488 bytes.
 	writeStr(Paras.imageDescription, LImageDescription, fp);
 	
-	// Fill 0. 400-887, 488 bytes.
-	fill(0x00, 488, fp);
+	// Fill 0. 888-2047, 1160 byts.
+	fill(0x00, 1160, fp);
 
 	// Image Data.
 	for (i = 0; i < Paras.width*Paras.height; i++) {
@@ -467,5 +478,72 @@ void writePixelsDataToTIFF() {
 
 }
 
+void prepareAndRead() {
+	readTIFFPixelsData();
+}
 
+void readTIFFPixelsData() {
+
+	const char* fileName = "sample.tif";
+	FILE* fp = fopen(fileName, "rb");
+
+	// Byte order. 0-1, 2 bytes.
+	int byteOrder;
+	fread(&byteOrder, LByteOrder, 1, fp);
+	printf("ByteOrder: 0x%x\n", byteOrder);
+	if (byteOrder == 0x4949) {
+		Paras.isLittleEndian = 1;
+	}
+	else if (byteOrder == 0x4D4D) {
+		Paras.isLittleEndian = 0;
+	}
+	else {
+		perror("Not compatible byte order.");
+		exit(1);
+	}
+
+	// First IFD offset. 4-7, 4 bytes.
+	fseek(fp, LByteOrder+LVersion, 0);
+	fread(&Paras.firstIFDOffset, LFirstIFDOffset, 1, fp);
+	printf("First IFD Offset: %ld\n", Paras.firstIFDOffset);
+
+
+	// Get image width, image height, bits per sample and strip offset info from IFD.
+	// ...
+
+	/* Test
+	// Image width.
+	fseek(fp, 144+LDirEntityTag+LDirEntityType+LDirEntityCount, 0);
+	fread(&Paras.width, LDirEntityValueOrOffset, 1, fp);
+	printf("Image Width: %ld\n", Paras.width);
+
+	// Image height.
+	fseek(fp, 156+LDirEntityTag+LDirEntityType+LDirEntityCount, 0);
+	fread(&Paras.height, LDirEntityValueOrOffset, 1, fp);
+	printf("Image Height: %ld\n", Paras.height);
+
+	// Bits per sample.
+	fseek(fp, 168+LDirEntityTag+LDirEntityType+LDirEntityCount, 0);
+	fread(&Paras.bitsPerSample, LDirEntityValueOrOffset, 1, fp);
+	printf("Bits Per Sample: %d\n", Paras.bitsPerSample);
+
+	// Strip offset.
+	fseek(fp, 228+LDirEntityTag+LDirEntityType+LDirEntityCount, 0);
+	fread(&Paras.stripOffset, LDirEntityValueOrOffset, 1, fp);
+	printf("Strip Offset: %ld\n", Paras.stripOffset);
+	*/
+
+	// Get pixels data.
+	// ...
+
+	/* Test
+	int i;
+	fseek(fp, Paras.stripOffset, 0);
+	fread(&i, Paras.bitsPerSample/8, 1, fp);
+	printf("Data[0]: %d\n", i);
+	*/
+	
+	fclose(fp);
+
+}
 
