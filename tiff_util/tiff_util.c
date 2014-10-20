@@ -173,8 +173,8 @@ void test() {
 	FILE* fp = fopen(fileName, "wb");
 
 	int i = switch32(0x12345678);
-	char* str = "test";
-	size_t len = strlen(str);
+	str = "test";
+	len = strlen(str);
 
 	fwrite(&i, sizeof(int), 1, fp);
 	fwrite(str, sizeof(char), len, fp);
@@ -484,7 +484,7 @@ void prepareAndRead() {
 
 void readTIFFPixelsData() {
 
-	const char* fileName = "sample.tif";
+	const char* fileName = "x.tif";
 	FILE* fp = fopen(fileName, "rb");
 
 	// Byte order. 0-1, 2 bytes.
@@ -552,7 +552,9 @@ void readTIFFPixelsData() {
 	// Get pixels data.
 	fseek(fp, Paras.stripOffset, SEEK_SET);
 	long* data = malloc(sizeof(long) * Paras.width * Paras.height);
-	for (i = 0; i < Paras.width*Paras.height; i++) {
+	long size = Paras.width*Paras.height;
+	long printLimit = size <= 1000 ? size : 1000;
+	for (i = 0; i < printLimit; i++) {
 		long value = 0;
 		fread(&value, Paras.bitsPerSample/8, 1, fp);
 		data[i] = value;
