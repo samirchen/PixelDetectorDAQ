@@ -155,13 +155,10 @@ void test();
 int main() {
 	
 	//test();
-
-	int i = checkIsLittleEndian();
-	printf("%d\n", i);
 	
 	//prepareAndWrite();
 
-	//prepareAndRead();
+	prepareAndRead();
 
 	return 0;
 }
@@ -504,7 +501,7 @@ void prepareAndRead() {
 
 void readTIFFPixelsData() {
 
-	const char* fileName = "x.tif";
+	const char* fileName = "sample.tif";
 	FILE* fp = fopen(fileName, "rb");
 
 	// Byte order. 0-1, 2 bytes.
