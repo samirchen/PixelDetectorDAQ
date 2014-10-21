@@ -165,6 +165,14 @@ int main() {
 
 void test() {
 
+	int check = 0x1;
+	if (*(char*)&check == 0x1) {
+		printf("System is Little Endian\n");
+	}
+	else {
+		printf("System is Big Endian\n");
+	}
+
 	printf("Hello\n");
 	char* str = "abc";
 	size_t len = strlen(str);
@@ -505,7 +513,8 @@ void readTIFFPixelsData() {
 	FILE* fp = fopen(fileName, "rb");
 
 	// Byte order. 0-1, 2 bytes.
-	int byteOrder;
+	//int byteOrder = 0; // Important to init this when it's int, or some bits are random.
+	short byteOrder = 0; 
 	fread(&byteOrder, LByteOrder, 1, fp);
 	printf("ByteOrder: 0x%x\n", byteOrder);
 	if (byteOrder == 0x4949) {
