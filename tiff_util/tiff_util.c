@@ -142,6 +142,7 @@ float calThreadCPUUse(ProcStat* ps1, ProcPidStat* pps1, ProcStat* ps2, ProcPidSt
 
 // ================= In this file. ================
 // Utility.
+int checkIsLittleEndian();
 void fill(char value, int count, FILE* fp);
 void writeStr(char* str, int limitLen, FILE* fp);
 void writeInteger(long i, int len, FILE* fp);
@@ -154,10 +155,13 @@ void test();
 int main() {
 	
 	//test();
+
+	int i = checkIsLittleEndian();
+	printf("%d\n", i);
 	
 	//prepareAndWrite();
 
-	prepareAndRead();
+	//prepareAndRead();
 
 	return 0;
 }
@@ -193,6 +197,21 @@ void test() {
 
 }
 
+int checkIsLittleEndian() {
+	union checkData {
+		int i;
+		char c;
+	} d;
+	d.i = 1;
+	if (d.c == 1) {
+		printf("System is Little Endian.\n");
+		return 1; // Little Endian.
+	}
+	else {
+		printf("System is Big Endian.\n");
+		return 0; // Big Endian.
+	}
+}
 
 void fill(char value, int count, FILE* fp) {
 	int i = 0;
@@ -239,6 +258,7 @@ void writeInteger(long i, int len, FILE* fp) {
 	
 	
 }
+
 
 void prepareAndWrite() {
 
