@@ -1,125 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "tiff_util.h"
 //#include "../common/dieWithError.h"
 //#include "../common/cpuUsage.h"
 
-// ================== Macros ====================
-// little-endian to big-endian or big-endian to little-endian.
-#define switch16(x) ( (short) ( (((short)(x) & (short)0x00ffU) << 8) | (((short)(x) & (short)0xff00U) >> 8) ) )
-#define switch24(x) ( ( (((x) & 0x0000ffU) << 16) | ((x) & 0x00ff00U ) | (((x) & 0xff0000U) >> 16) ) )
-#define switch32(x) ( (long) ( ((long)(x) & (long)0x000000ffU) << 24  ) | ( ((long)(x) & (long)0x0000ff00U) << 8  ) | (((long)(x) & (long)0x00ff0000U) >> 8) | (((long)(x) & (long)0xff000000U) >> 24) )
 
-// ================== Consts when using ==================
-// Normal IFD index.
-#define ENIndexSubfileType 0
-#define ENIndexImageWidth 1
-#define ENIndexImageHeight 2
-#define ENIndexBitsPerSample 3
-#define ENIndexCompression 4
-#define ENIndexPhotometricInterpretation 5
-#define ENIndexImageDescription 6
-#define ENIndexModel 7
-#define ENIndexStripOffsets 8
-#define ENIndexRowsPerStrip 9
-#define ENIndexStripByteCounts 10
-#define ENIndexXResolution 11
-#define ENIndexYResolution 12
-#define ENIndexSoftware 13
-#define ENIndexDateTime 14
-#define ENIndexArtist 15
-#define ENIndexSampleFormat 16
-
-// Normal IFD tags.
-#define ENTagSubfileType 0xFE
-#define ENTagImageWidth 0x100
-#define ENTagImageHeight 0x101
-#define ENTagBitsPerSample 0x102
-#define ENTagCompression 0x103
-#define ENTagPhotometricInterpretation 0x106
-#define ENTagImageDescription 0x10E
-#define ENTagModel 0x110
-#define ENTagStripOffsets 0x111
-#define ENTagRowsPerStrip 0x116
-#define ENTagStripByteCounts 0x117
-#define ENTagXResolution 0x11A
-#define ENTagYResolution 0x11B
-#define ENTagSoftware 0x131
-#define ENTagDateTime 0x132
-#define ENTagArtist 0x13B
-#define ENTagSampleFormat 0x153
-
-// Normal IFD data type.
-#define ENTypeByte 0x01
-#define ENTypeASCII 0x02
-#define ENTypeShort 0x03
-#define ENTypeLong 0x04
-#define ENTypeRational 0x05
-
-// Length(Bytes) of each field.
-#define LByteOrder 2
-#define LVersion 2
-#define LFirstIFDOffset 4
-
-#define LArtist 18
-#define LDateTime 32
-#define LModel 48
-#define LSoftware 20
-#define LImageDescription 488
-
-#define LNumOfDirEntities 2
-#define LDirEntity 12
-#define LDirEntityTag 2
-#define LDirEntityType 2
-#define LDirEntityCount 4
-#define LDirEntityValueOrOffset 4
-#define LNextIFDOffset 4
-
-
-
-
-// ================== IFD ==================
-typedef struct tiffIFDEntity {
-	short tag; // 2 bytes.
-	short type; // 2 bytes.
-	long count; // 4 bytes.
-	long valueOrOffset;	// 4 bytes.
-} IFDEntity;
-typedef struct tiffIFD {
-	short numOfDirEntities; // 2 bytes.
-	IFDEntity* entities; // Array of entities. 12*numOfDirEntities bytes.
-	long nextIFDOffset; // 4 bytes.
-} IFD;
-
-
-
-// ================== Paramerters when using ==================
-struct PARAS {
-	// Header.
-	char isLittleEndian; // 0-1, 2 bytes. little-endian: 4949.H; big-endian: 4D4D.H.
-	short version; // 2-3, 2 bytes.
-	long firstIFDOffset; // 4-7, 4 bytes.
-
-
-	// IFD.
-	IFD ifd; // 1 IFD.
-	//// Some IFD entities value.
-	long width;
-	long height;
-	short bitsPerSample;
-	long stripOffset;
-	char* artist; // 18 bytes.
-	char* datetime; // 32 bytes.
-	char* model; // 48 bytes.
-	char* software; // 20 bytes.
-	long xResolutionA; // 4 bytes.
-	long xResolutionB; // 4 bytes.
-	long yResolutionA; // 4 bytes.
-	long yResolutionB; // 4 bytes.
-	char* imageDescription; // 488 bytes.
-
-
-} Paras;
+TiffParas Paras;
 
 
 /* ######################## Method Declare ######################## */
@@ -146,61 +33,72 @@ int checkIsLittleEndian();
 void fill(char value, int count, FILE* fp);
 void writeStr(char* str, int limitLen, FILE* fp);
 void writeInteger(long i, int len, FILE* fp);
-void prepareAndWrite();
-void writePixelsDataToTIFF();
-void prepareAndRead();
-void readTIFFPixelsData();
-void test();
+// Write Tiff.
+//void prepareAndWrite(TiffParas* paras, long* pixelData, const char* fileName); // API in .h.
+void writePixelsDataToTIFF(const long* pixelData, const char* fileName);
+// Read Tiff.
+//void readTIFFParas(TiffParas* paras, const char* fileName);
+//void readTIFFPixelsData(const TiffParas* paras, long* pixelData, const char* fileName);
 
+
+/*
 int main() {
-	
-	//test();
-	
-	//prepareAndWrite();
+		
+	// Write Data to TIFF.
+	//// Tiff paras.
+	TiffParas* paras = (TiffParas*) malloc(sizeof(TiffParas));
+	paras->isLittleEndian = 1;
+	paras->version = 0x2A;
+	paras->firstIFDOffset = 0x82;
+	paras->width = 10;
+	paras->height = 10;
+	paras->bitsPerSample = 32;
+	paras->stripOffset = 2048;
+	paras->artist = "artist";
+	paras->datetime = "2014:07:07 22:30:23";
+	paras->model = "model";
+	paras->software = "software";
+	paras->xResolutionA = 1043;
+	paras->xResolutionB = 7;
+	paras->yResolutionA = 1043;
+	paras->yResolutionB = 7;
+	paras->imageDescription = "image description";
+	//// Tiff pixel data.
+	long* data = (long*) malloc(sizeof(long)*paras->width*paras->height);
+	int i = 0;
+	for (i = 0; i < paras->width*paras->height; ++i) {
+		data[i] = 100+i;
+	}
+	//// Prepare and write.
+	prepareAndWrite(paras, data, "sample.tif");
+	//// Clean.
+	free(data);
+	free(paras);
 
-	prepareAndRead();
+
+	// Read Data from TIFF.
+	TiffParas* rParas = (TiffParas*) malloc(sizeof(TiffParas));
+	readTIFFParas(rParas, "sample.tif");
+	printf("Image Width: %ld\n", rParas->width);
+	printf("Image Height: %ld\n", rParas->height);
+	printf("Bits Per Sample: %d\n", rParas->bitsPerSample);
+	printf("Strip Offset: %ld\n", rParas->stripOffset);
+	long size = rParas->width*rParas->height;
+	long* rData = (long*) malloc(sizeof(long)*size);
+	readTIFFPixelsData(rParas, rData, "sample.tif");
+	long printLimit = size > 1000 ? 1000 : size;
+	for (i = 0; i < printLimit; i++) {
+	}
+		printf("%ld ", rData[i]);
+	printf("\n");
+	free(rParas);
+	free(rData);
 
 	return 0;
 }
+*/
 
-void test() {
 
-	int check = 0x1;
-	if (*(char*)&check == 0x1) {
-		printf("System is Little Endian\n");
-	}
-	else {
-		printf("System is Big Endian\n");
-	}
-
-	printf("Hello\n");
-	char* str = "abc";
-	size_t len = strlen(str);
-	printf("%zu\n", len);
-
-	const char* fileName = "out.txt";
-	FILE* fp = fopen(fileName, "wb");
-
-	int i = switch32(0x12345678);
-	str = "test";
-	len = strlen(str);
-
-	fwrite(&i, sizeof(int), 1, fp);
-	fwrite(str, sizeof(char), len, fp);
-	fclose(fp);
-
-	fp = fopen(fileName, "rb");
-	int k = 0;
-	char buf[1024];
-	bzero(buf, 1024);
-
-	fread(&k, sizeof(int), 1, fp);
-	printf("%d\n", k);
-	fread(buf, sizeof(char), 1024, fp);
-	printf("%s\n", buf);
-	fclose(fp);
-
-}
 
 int checkIsLittleEndian() {
 	union checkData {
@@ -265,146 +163,170 @@ void writeInteger(long i, int len, FILE* fp) {
 }
 
 
-void prepareAndWrite() {
+void prepareAndWrite(TiffParas* paras, long* pixelData, const char* fileName) {
 
-	// Set parameters.
-	Paras.isLittleEndian = 1;
-	Paras.version = 0x2A;
-	Paras.firstIFDOffset = 0x82;
+	if (paras == NULL) {
+		printf("Set default tiff Paras.\n");
+		// Set default parameters.
+		Paras.isLittleEndian = 1;
+		Paras.version = 0x2A;
+		Paras.firstIFDOffset = 0x82;
 
-	Paras.width = 10;
-	Paras.height = 10;
-	Paras.bitsPerSample = 32;
-	Paras.stripOffset = 2048;
-	Paras.artist = "artist";
-	Paras.datetime = "2014:07:07 22:30:23";
-	Paras.model = "model";
-	Paras.software = "software";
-	Paras.xResolutionA = 1043;
-	Paras.xResolutionB = 7;
-	Paras.yResolutionA = 1043;
-	Paras.yResolutionB = 7;
-	Paras.imageDescription = "image description";
+		Paras.width = 10;
+		Paras.height = 10;
+		Paras.bitsPerSample = 32;
+		Paras.stripOffset = 2048;
+		Paras.artist = "artist";
+		Paras.datetime = "2014:07:07 22:30:23";
+		Paras.model = "model";
+		Paras.software = "software";
+		Paras.xResolutionA = 1043;
+		Paras.xResolutionB = 7;
+		Paras.yResolutionA = 1043;
+		Paras.yResolutionB = 7;
+		Paras.imageDescription = "image description";
+	}
+	else {
+		// Set parameters.
+		Paras.isLittleEndian = paras->isLittleEndian;
+		Paras.version = paras->version;
+		Paras.firstIFDOffset = paras->firstIFDOffset;
+
+		Paras.width = paras->width;
+		Paras.height = paras->height;
+		Paras.bitsPerSample = paras->bitsPerSample;
+		Paras.stripOffset = paras->stripOffset;
+		Paras.artist = paras->artist;
+		Paras.datetime = paras->datetime;
+		Paras.model = paras->model;
+		Paras.software = paras->software;
+		Paras.xResolutionA = paras->xResolutionA;
+		Paras.xResolutionB = paras->xResolutionB;
+		Paras.yResolutionA = paras->yResolutionA;
+		Paras.yResolutionB = paras->yResolutionB;
+		Paras.imageDescription = paras->imageDescription;
+	}
+	
 
 	//// IFD.
-	IFD firstIFD;
+	TiffIFD firstIFD;
 	firstIFD.numOfDirEntities = 0x11;
-	firstIFD.entities = malloc(firstIFD.numOfDirEntities*sizeof(IFDEntity)); // Cannot replace "sizeof(IFDEntity)" with "LDirEntity".
+	firstIFD.entities = malloc(firstIFD.numOfDirEntities*sizeof(TiffIFDEntity)); // Cannot replace "sizeof(TiffIFDEntity)" with "LDirEntity".
 	// Set IFD.
 	// 1.
-	IFDEntity enSubfileType;
+	TiffIFDEntity enSubfileType;
 	enSubfileType.tag = ENTagSubfileType;
 	enSubfileType.type = ENTypeLong;
 	enSubfileType.count = 0x01;
 	enSubfileType.valueOrOffset = 0x00;
 	firstIFD.entities[ENIndexSubfileType] = enSubfileType;
 	// 2.
-	IFDEntity enImageWidth;
+	TiffIFDEntity enImageWidth;
 	enImageWidth.tag = ENTagImageWidth;
 	enImageWidth.type = ENTypeLong;
 	enImageWidth.count = 0x01;
 	enImageWidth.valueOrOffset = Paras.width;
 	firstIFD.entities[ENIndexImageWidth] = enImageWidth;
 	// 3.
-	IFDEntity enImageHeight;
+	TiffIFDEntity enImageHeight;
 	enImageHeight.tag = ENTagImageHeight;
 	enImageHeight.type = ENTypeLong;
 	enImageHeight.count = 0x01;
 	enImageHeight.valueOrOffset = Paras.height;
 	firstIFD.entities[ENIndexImageHeight] = enImageHeight;
 	// 4.
-	IFDEntity enBitsPerSample;
+	TiffIFDEntity enBitsPerSample;
 	enBitsPerSample.tag = ENTagBitsPerSample;
 	enBitsPerSample.type = ENTypeShort;
 	enBitsPerSample.count = 0x01;
 	enBitsPerSample.valueOrOffset = Paras.bitsPerSample;
 	firstIFD.entities[ENIndexBitsPerSample] = enBitsPerSample;
 	// 5.
-	IFDEntity enCompression;
+	TiffIFDEntity enCompression;
 	enCompression.tag = ENTagCompression;
 	enCompression.type = ENTypeShort;
 	enCompression.count = 0x01;
 	enCompression.valueOrOffset = 0x01;
 	firstIFD.entities[ENIndexCompression] = enCompression;
 	// 6.
-	IFDEntity enPhotometricInterpretation;
+	TiffIFDEntity enPhotometricInterpretation;
 	enPhotometricInterpretation.tag = ENTagPhotometricInterpretation;
 	enPhotometricInterpretation.type = ENTypeShort;
 	enPhotometricInterpretation.count = 0x01;
 	enPhotometricInterpretation.valueOrOffset = 0x01;
 	firstIFD.entities[ENIndexPhotometricInterpretation] = enPhotometricInterpretation;
 	// 7.
-	IFDEntity enImageDescription;
+	TiffIFDEntity enImageDescription;
 	enImageDescription.tag = ENTagImageDescription;
 	enImageDescription.type = ENTypeASCII;
 	enImageDescription.count = 0x1E8;
 	enImageDescription.valueOrOffset = 0x190;
 	firstIFD.entities[ENIndexImageDescription] = enImageDescription;
 	// 8.
-	IFDEntity enModel;
+	TiffIFDEntity enModel;
 	enModel.tag = ENTagModel;
 	enModel.type = ENTypeASCII;
 	enModel.count = 0x30;
 	enModel.valueOrOffset = 0x3E;
 	firstIFD.entities[ENIndexModel] = enModel;
 	// 9.
-	IFDEntity enStripOffsets;
+	TiffIFDEntity enStripOffsets;
 	enStripOffsets.tag = ENTagStripOffsets;
 	enStripOffsets.type = ENTypeLong;
 	enStripOffsets.count = 0x01;
 	enStripOffsets.valueOrOffset = Paras.stripOffset;
 	firstIFD.entities[ENIndexStripOffsets] = enStripOffsets;
 	// 10.
-	IFDEntity enRowsPerStrip;
+	TiffIFDEntity enRowsPerStrip;
 	enRowsPerStrip.tag = ENTagRowsPerStrip;
 	enRowsPerStrip.type = ENTypeLong;
 	enRowsPerStrip.count = 0x01;
 	enRowsPerStrip.valueOrOffset = 0x413;
 	firstIFD.entities[ENIndexRowsPerStrip] = enRowsPerStrip;
 	// 11.
-	IFDEntity enStripByteCounts;
+	TiffIFDEntity enStripByteCounts;
 	enStripByteCounts.tag = ENTagStripByteCounts;
 	enStripByteCounts.type = ENTypeLong;
 	enStripByteCounts.count = 0x01;
 	enStripByteCounts.valueOrOffset = Paras.bitsPerSample/8 * Paras.width * Paras.height;
 	firstIFD.entities[ENIndexStripByteCounts] = enStripByteCounts;
 	// 12.
-	IFDEntity enXResolution;
+	TiffIFDEntity enXResolution;
 	enXResolution.tag = ENTagXResolution;
 	enXResolution.type = ENTypeRational;
 	enXResolution.count = 0x01;
 	enXResolution.valueOrOffset = 0x154;
 	firstIFD.entities[ENIndexXResolution] = enXResolution;
 	// 13.
-	IFDEntity enYResolution;
+	TiffIFDEntity enYResolution;
 	enYResolution.tag = ENTagYResolution;
 	enYResolution.type = ENTypeRational;
 	enYResolution.count = 0x01;
 	enYResolution.valueOrOffset = 0x15C;
 	firstIFD.entities[ENIndexYResolution] = enYResolution;
 	// 14.
-	IFDEntity enSoftware;
+	TiffIFDEntity enSoftware;
 	enSoftware.tag = ENTagSoftware;
 	enSoftware.type = ENTypeASCII;
 	enSoftware.count = 0x14;
 	enSoftware.valueOrOffset = 0x6E;
 	firstIFD.entities[ENIndexSoftware] = enSoftware;
 	// 15.
-	IFDEntity enDateTime;
+	TiffIFDEntity enDateTime;
 	enDateTime.tag = ENTagDateTime;
 	enDateTime.type = ENTypeASCII;
 	enDateTime.count = 0x20;
 	enDateTime.valueOrOffset = 0x1E;
 	firstIFD.entities[ENIndexDateTime] = enDateTime;
 	// 16.
-	IFDEntity enArtist;
+	TiffIFDEntity enArtist;
 	enArtist.tag = ENTagArtist;
 	enArtist.type = ENTypeASCII;
 	enArtist.count = 0x12;
 	enArtist.valueOrOffset = 0x0C;
 	firstIFD.entities[ENIndexArtist] = enArtist;
 	// 17.
-	IFDEntity enSampleFormat;
+	TiffIFDEntity enSampleFormat;
 	enSampleFormat.tag = ENTagSampleFormat;
 	enSampleFormat.type = ENTypeShort;
 	enSampleFormat.count = 0x01;
@@ -415,18 +337,21 @@ void prepareAndWrite() {
 	Paras.ifd = firstIFD;
 
 	// Write tiff.
-	writePixelsDataToTIFF();
+	writePixelsDataToTIFF(pixelData, fileName);
 
 	// Clear.
 	free(firstIFD.entities);
 
 }
 
-void writePixelsDataToTIFF() {
+void writePixelsDataToTIFF(const long* pixelData, const char* fileName) {
 
-	const char* fileName = "sample.tif";
+	//const char* fileName = "sample.tif";
 	FILE* fp = fopen(fileName, "wb");
-
+	if (!fp) {
+		perror("Error: Failed to open tiff file when write.");
+		exit(1);
+	}
 
 	// ========= Header ===========
 	// Byte order. 0-1, 2 bytes.
@@ -470,7 +395,7 @@ void writePixelsDataToTIFF() {
 	writeInteger(Paras.ifd.numOfDirEntities, LNumOfDirEntities, fp);
 	int i = 0;
 	for (i = 0; i < Paras.ifd.numOfDirEntities; ++i) {
-		IFDEntity en = Paras.ifd.entities[i];
+		TiffIFDEntity en = Paras.ifd.entities[i];
 		writeInteger(en.tag, LDirEntityTag, fp);
 		writeInteger(en.type, LDirEntityType, fp);
 		writeInteger(en.count, LDirEntityCount, fp);
@@ -496,21 +421,23 @@ void writePixelsDataToTIFF() {
 
 	// Image Data.
 	for (i = 0; i < Paras.width*Paras.height; i++) {
-		writeInteger(i, Paras.bitsPerSample/8, fp);
+		writeInteger(pixelData[i], Paras.bitsPerSample/8, fp);
 	}
 
 	fclose(fp);
 
 }
 
-void prepareAndRead() {
-	readTIFFPixelsData();
-}
 
-void readTIFFPixelsData() {
 
-	const char* fileName = "x.tif";
+
+void readTIFFParas(TiffParas* paras, const char* fileName) {
+	//const char* fileName = "x.tif";
 	FILE* fp = fopen(fileName, "rb");
+	if (!fp) {
+		perror("Error: Failed to open tiff file when read paras.");
+		exit(1);
+	}
 
 	// Byte order. 0-1, 2 bytes.
 	//int byteOrder = 0; // Important to init this when it's int, or some bits are random.
@@ -518,29 +445,29 @@ void readTIFFPixelsData() {
 	fread(&byteOrder, LByteOrder, 1, fp);
 	printf("ByteOrder: 0x%x\n", byteOrder);
 	if (byteOrder == 0x4949) {
-		Paras.isLittleEndian = 1;
+		paras->isLittleEndian = 1;
 	}
 	else if (byteOrder == 0x4D4D) {
-		Paras.isLittleEndian = 0;
+		paras->isLittleEndian = 0;
 	}
 	else {
-		perror("Not compatible byte order.");
+		perror("Error: Not compatible byte order.");
 		exit(1);
 	}
 
 	// First IFD offset. 4-7, 4 bytes.
 	fseek(fp, LByteOrder+LVersion, SEEK_SET);
-	fread(&Paras.firstIFDOffset, LFirstIFDOffset, 1, fp);
-	printf("First IFD Offset: %ld\n", Paras.firstIFDOffset);
+	fread(&paras->firstIFDOffset, LFirstIFDOffset, 1, fp);
+	printf("First IFD Offset: %ld\n", paras->firstIFDOffset);
 
 	// IFD info.
 	// Number of entities. 2 bytes.
-	fseek(fp, Paras.firstIFDOffset, SEEK_SET);
-	fread(&Paras.ifd.numOfDirEntities, LNumOfDirEntities, 1, fp);
-	printf("Number of IFD entities: %d\n", Paras.ifd.numOfDirEntities);
+	fseek(fp, paras->firstIFDOffset, SEEK_SET);
+	fread(&paras->ifd.numOfDirEntities, LNumOfDirEntities, 1, fp);
+	printf("Number of IFD entities: %d\n", paras->ifd.numOfDirEntities);
 	// Get image width, image height, bits per sample and strip offset info from IFD.
 	int i = 0;
-	for (i = 0; i < Paras.ifd.numOfDirEntities; i++) {
+	for (i = 0; i < paras->ifd.numOfDirEntities; i++) {
 		int tag = 0;
 		fread(&tag, LDirEntityTag, 1, fp);
 
@@ -548,48 +475,50 @@ void readTIFFPixelsData() {
 		if (tag == ENTagImageWidth) {
 			fseek(fp, LDirEntityType+LDirEntityCount, SEEK_CUR);
 			fread(&value, LDirEntityValueOrOffset, 1, fp);
-			Paras.width = value;
+			paras->width = value;
 		}
 		else if (tag == ENTagImageHeight) {
 			fseek(fp, LDirEntityType+LDirEntityCount, SEEK_CUR);
 			fread(&value, LDirEntityValueOrOffset, 1, fp);
-			Paras.height = value;
+			paras->height = value;
 		}
 		else if (tag == ENTagBitsPerSample) {
 			fseek(fp, LDirEntityType+LDirEntityCount, SEEK_CUR);
 			fread(&value, LDirEntityValueOrOffset, 1, fp);
-			Paras.bitsPerSample = value;
+			paras->bitsPerSample = value;
 		}
 		else if (tag == ENTagStripOffsets) {
 			fseek(fp, LDirEntityType+LDirEntityCount, SEEK_CUR);
 			fread(&value, LDirEntityValueOrOffset, 1, fp);
-			Paras.stripOffset = value;
+			paras->stripOffset = value;
 		}
 		else {
 			fseek(fp, LDirEntityType+LDirEntityCount+LDirEntityValueOrOffset, SEEK_CUR);
 		}
 	}
-	printf("Image Width: %ld\n", Paras.width);
-	printf("Image Height: %ld\n", Paras.height);
-	printf("Bits Per Sample: %d\n", Paras.bitsPerSample);
-	printf("Strip Offset: %ld\n", Paras.stripOffset);
+	
 
+	fclose(fp);
+}
+
+void readTIFFPixelsData(const TiffParas* paras, long* pixelData, const char* fileName) {
+
+	//const char* fileName = "x.tif";
+	FILE* fp = fopen(fileName, "rb");
+	if (!fp) {
+		perror("Error: Failed to open tiff file when read data.");
+		exit(1);
+	}
 
 	// Get pixels data.
-	fseek(fp, Paras.stripOffset, SEEK_SET);
-	long* data = malloc(sizeof(long) * Paras.width * Paras.height);
-	long size = Paras.width*Paras.height;
-	long printLimit = size <= 1000 ? size : 1000;
-	for (i = 0; i < printLimit; i++) {
+	fseek(fp, paras->stripOffset, SEEK_SET);
+	long size = paras->width*paras->height;
+	int i = 0;
+	for (i = 0; i < size; i++) {
 		long value = 0;
-		fread(&value, Paras.bitsPerSample/8, 1, fp);
-		data[i] = value;
-		printf("%ld ", data[i]);
+		fread(&value, paras->bitsPerSample/8, 1, fp);
+		pixelData[i] = value;
 	}
-	printf("\n");
-
-	free(data);
-
 	
 	fclose(fp);
 
