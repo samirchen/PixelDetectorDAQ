@@ -3,9 +3,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
-#include <linux/limits.h>
+//#include <linux/limits.h>
 #include "cpuUsage.h"
-#include "dieWithError.h"
 
 #define READBUFSIZE 1024
 
@@ -17,7 +16,8 @@ void getWholeCPUStatus(ProcStat* ps) {
 	chdir("/proc");
 	inputFile = fopen("stat", "r");
 	if (!inputFile) {
-		dieWithError("'/proc/stat' fopen() failed");
+		perror("'/proc/stat' fopen() failed");
+		exit(1);
 	}
 
 	char buff[1024];
@@ -53,7 +53,8 @@ void getProcessCPUStatus(ProcPidStat* pps, pid_t pid) {
 	//printf(fileName);
 	inputFile = fopen(fileName, "r");
 	if (!inputFile) {
-		dieWithError("fopen() failed");
+		perror("fopen() failed");
+		exit(1);
 	}
 	
 	char buff[1024];
@@ -91,7 +92,8 @@ void getThreadCPUStatus(ProcPidStat* pps, pid_t pid, pid_t tid) {
 	//printf(fileName);
 	inputFile = fopen(fileName, "r");
 	if (!inputFile) {
-		dieWithError("fopen() failed");
+		perror("fopen() failed");
+		exit(1);
 	}
 	
 	char buff[1024];

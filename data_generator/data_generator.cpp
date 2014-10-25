@@ -9,7 +9,6 @@
 #include <sys/time.h> // for timeval.
 #include <pthread.h> // for pthread_create().
 #include <sys/syscall.h> // for SYS_gettid.
-#include "../common/dieWithError.h"
 #include "../common/cpuUsage.h"
 using namespace std;
 
@@ -40,9 +39,6 @@ int Pixel_Matrix[PIXEL_MATRIX_HEIGHT*PIXEL_MATRIX_WIDTH];
 
 /* ######################## Method Declare ######################## */
 // ================= Out of this file. ================
-// In "dieWithError.c".
-void dieWithError(const char *errorMessage);
-
 // In "cpuUsage.c".
 void getWholeCPUStatus(ProcStat* ps);
 float calWholeCPUUse(ProcStat* ps1, ProcStat* ps2);
@@ -125,7 +121,8 @@ void sendData() {
 
 	// Create a reliable, stream socket using TCP.
 	if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
-		dieWithError("sendData socket() failed.");
+		perror("sendData socket() failed.");
+		exit(1);
 	}
 
 	// Construct the server address structure.
@@ -136,7 +133,8 @@ void sendData() {
 
 	// Establish the connection to the server.
 	if (connect(sock, (struct sockaddr*) &servAddr, sizeof(servAddr)) < 0) {
-		dieWithError("sendData connect() failed.");
+		perror("sendData connect() failed.");
+		exit(1);
 	}
 
 	// [
@@ -172,7 +170,8 @@ void sendData() {
 	//if (send(sock, package, pkgSize, 0) != pkgSize) {
 	//while (1) {
 		if (send(sock, (char*) Pixel_Matrix, pixelDataSize, 0) != pixelDataSize) {
-			dieWithError("sendData send() send a different number of bytes than expected");
+			perror("sendData send() send a different number of bytes than expected");
+			exit(1);
 		}
 	//}
 
@@ -192,7 +191,8 @@ void sendData() {
 
 	while (1) {
 		if (send(sock, package, pkgSize, 0) != pkgSize) {
-            dieWithError("L1 client send() send a different number of bytes than expected");
+            perror("L1 client send() send a different number of bytes than expected");
+			exit(1);
         }
         sendTimes++;
 

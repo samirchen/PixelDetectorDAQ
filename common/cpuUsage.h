@@ -2,7 +2,7 @@
 #define CPUUSAGE_H
 
 #include <stdlib.h>
-#include <linux/limits.h>
+//#include <linux/limits.h>
 
 typedef long long int num;
 
@@ -21,7 +21,7 @@ typedef struct procstat {
 
 typedef struct procpidstat {
 	num pid;
-	char tcomm[PATH_MAX];
+	char tcomm[1024];
 	char state;
 
 	num ppid;

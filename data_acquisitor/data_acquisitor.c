@@ -6,7 +6,6 @@
 #include <string.h> // for memset().
 #include <pthread.h> // for pthread_create(). And use -pthread on Ubuntu, -lpthread on SLC.
 #include <sys/syscall.h>
-#include "../common/dieWithError.h"
 #include "../common/cpuUsage.h"
 
 /* ######################## Local Global Data Structure ######################## */
@@ -79,9 +78,6 @@ typedef struct connection {
 
 /* ######################## Method Declare ######################## */
 // ================= Out of this file. ================
-// In "dieWithError.c".
-void dieWithError(const char *errorMessage);
-
 // In "cpuUsage.c".
 void getWholeCPUStatus(ProcStat* ps);
 float calWholeCPUUse(ProcStat* ps1, ProcStat* ps2);
@@ -189,7 +185,8 @@ void* threadReceive(void* arg) {
 
     while (1) {
         if ((recvMsgSize = recv(connectionSock, buffer, DATASIZE*sizeof(int), 0)) < 0) {
-            dieWithError("threadReceive recv() failed");
+            perror("threadReceive recv() failed");
+			exit(1);
         }
         else if (recvMsgSize > 0) {
             totalRecvMsgSize += recvMsgSize;
@@ -267,7 +264,8 @@ void* threadReceiveConnection(void* arg) {
 
     while (1) {
         if ((recvMsgSize = recv(connectionSock, buffer, DATASIZE*sizeof(int), 0)) < 0) {
-            dieWithError("threadReceiveConnection recv() failed");
+            perror("threadReceiveConnection recv() failed");
+			exit(1);
         }
         else if (recvMsgSize > 0) {
             totalRecvMsgSize += recvMsgSize;
@@ -287,7 +285,8 @@ void* threadReceiveConnection(void* arg) {
 			FILE* fp;
 			fp = fopen(fileName, "w");
 			if (fp == NULL) {
-				dieWithError("threadReceiveConnection fopen() failed");	
+				perror("threadReceiveConnection fopen() failed");	
+				exit(1);
 			}
 			for (i = 0; i < DATASIZE; i++) {
 				fprintf(fp, "%d ", ntohs(buffer[i]));
@@ -301,7 +300,8 @@ void* threadReceiveConnection(void* arg) {
 			FILE* fp;
 			fp = fopen(fileName, "w");
 			if (fp == NULL) {
-				dieWithError("threadReceiveConnection fopen() failed");
+				perror("threadReceiveConnection fopen() failed");
+				exit(1);
 			}
 			fprintf(fp, "Socket:%d\n%d %d %s", connectionSock, 1, 2, "text");
 			fclose(fp);
@@ -360,12 +360,14 @@ void recvMultiConnsDataWithMultiThreads() {
 
     // socket: get listen socket.
     if ((listenSock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        dieWithError("recvMultiConnsDataWithMultiThreads socket() failed");
+        perror("recvMultiConnsDataWithMultiThreads socket() failed");
+		exit(1);
     }
 
 	// setsockopt: set options of listen socket.
     if (setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) < 0) {
-        dieWithError("recvMultiConnsDataWithMultiThreads setsockopt() failed");
+        perror("recvMultiConnsDataWithMultiThreads setsockopt() failed");
+		exit(1);
     }
 
     // Construct local address structure.
@@ -376,12 +378,14 @@ void recvMultiConnsDataWithMultiThreads() {
 
 	// bind: bind listen socket to server address.
     if (bind(listenSock, (struct sockaddr*) &servAddr, sizeof(servAddr)) < 0) {
-        dieWithError("recvMultiConnsDataWithMultiThreads bind() failed");
+        perror("recvMultiConnsDataWithMultiThreads bind() failed");
+		exit(1);
     }
 
 	// listen: listen on listen socket.
     if (listen(listenSock, MAXPENDING) < 0) {
-        dieWithError("recvMultiConnsDataWithMultiThreads listen() failed");
+        perror("recvMultiConnsDataWithMultiThreads listen() failed");
+		exit(1);
     }
 	printf("Server <IP:Port>: <%s:%d>\n\n", inet_ntoa(servAddr.sin_addr), ntohs(servAddr.sin_port));
 
@@ -401,7 +405,8 @@ void recvMultiConnsDataWithMultiThreads() {
         int readyFdCount = 0;
 		// select: returns the ready fd count when it works. Returns 0 if timeout, -1 if error.
         if ((readyFdCount = select(maxsock+1, &fds, NULL, NULL, &timeout)) < 0) {
-            dieWithError("recvMultiConnsDataWithMultiThreads select() failed");
+            perror("recvMultiConnsDataWithMultiThreads select() failed");
+			exit(1);
         }
         else if (readyFdCount == 0) {
             printf("timeout\n");
@@ -411,7 +416,8 @@ void recvMultiConnsDataWithMultiThreads() {
 		if (FD_ISSET(listenSock, &fds)) {
 			// accept: accept and construct the new connection
 			if ((connectionSock = accept(listenSock, (struct sockaddr*) &clntAddr, &clntLen)) < 0) {
-				dieWithError("recvMultiConnsDataWithMultiThreads accept() failed");
+				perror("recvMultiConnsDataWithMultiThreads accept() failed");
+				exit(1);
 			}
 			printf("New connection on socket: %d\n", connectionSock);
 			printf("New connection from <IP:Port>: <%s:%d>\n", inet_ntoa(clntAddr.sin_addr), ntohs(clntAddr.sin_port));
@@ -438,7 +444,8 @@ void recvMultiConnsDataWithMultiThreads() {
 			conn->clientAddress = c;
 			pthread_t ntid;
 			if (pthread_create(&ntid, NULL, threadReceiveConnection, conn) < 0) { // threadReceiveConnection: thread method; conn: argument for thread method.
-				dieWithError("recvMultiConnsDataWithMultiThreads pthread_create() failed");
+				perror("recvMultiConnsDataWithMultiThreads pthread_create() failed");
+				exit(1);
 			}
 			//pthread_join(ntid, NULL);
 
@@ -465,7 +472,8 @@ void recvMultiConnsDataOneByOne() {
 
 	// Create socket for incoming connections.
 	if ((listenSock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
-		dieWithError("server socket() failed.");		
+		perror("server socket() failed.");		
+		exit(1);
 	}
 
 	// Construct local address structure.
@@ -476,12 +484,14 @@ void recvMultiConnsDataOneByOne() {
 
 	// Bind to the local address.
 	if (bind(listenSock, (struct sockaddr*) &servAddr, sizeof(servAddr)) < 0) {
-		dieWithError("server bind() failed.");
+		perror("server bind() failed.");
+		exit(1);
 	}
 
 	// Mark the socket so it will listen for incoming connections.
 	if (listen(listenSock, MAXPENDING) < 0) {
-		dieWithError("server listen() failed.");
+		perror("server listen() failed.");
+		exit(1);
 	}
 
 	fd_set fds;
@@ -496,7 +506,8 @@ void recvMultiConnsDataOneByOne() {
 		timeout.tv_usec = 0;
 		int readyFdCount = 0;
 		if ((readyFdCount = select(maxsock+1, &fds, NULL, NULL, &timeout)) < 0) {
-			dieWithError("server select() failed.");
+			perror("server select() failed.");
+			exit(1);
 		}
 		else if (readyFdCount == 0) {
 			printf("timeout\n");
@@ -505,7 +516,8 @@ void recvMultiConnsDataOneByOne() {
 
 		// Process will go on until server accepts a new connection.
 		if ((connectionSock = accept(listenSock, (struct sockaddr*) &clntAddr, &clntLen)) < 0) {
-			dieWithError("server accept failed.");
+			perror("server accept failed.");
+			exit(1);
 		}
 		printf("New connection on socket %d\n", connectionSock);
 		printf("New connection from <IP:Port>: <%s:%d>\n", inet_ntoa(clntAddr.sin_addr), ntohs(clntAddr.sin_port));
@@ -539,7 +551,8 @@ void recvMultiConnsDataOneByOne() {
 		while (1) {
 			//if ((recvMsgSize = recv(connectionSock, buffer, RCVBUFSIZE, 0)) < 0) {
 			if ((recvMsgSize = recv(connectionSock, Data_Buffer, DATASIZE*sizeof(int), 0)) < 0) {
-				dieWithError("server recv() failed.");
+				perror("server recv() failed.");
+				exit(1);
 			}
 			else if (recvMsgSize > 0) {
 				totalRecvMsgSize += recvMsgSize;
