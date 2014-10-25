@@ -6,6 +6,7 @@
 #include <string.h> // for memset().
 #include <pthread.h> // for pthread_create(). And use -pthread on Ubuntu, -lpthread on SLC.
 #include <sys/syscall.h>
+#include <sys/types.h>
 #include "../common/cpuUsage.h"
 
 /* ######################## Local Global Data Structure ######################## */
