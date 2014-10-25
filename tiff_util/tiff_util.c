@@ -509,7 +509,7 @@ void prepareAndRead() {
 
 void readTIFFPixelsData() {
 
-	const char* fileName = "sample.tif";
+	const char* fileName = "x.tif";
 	FILE* fp = fopen(fileName, "rb");
 
 	// Byte order. 0-1, 2 bytes.
