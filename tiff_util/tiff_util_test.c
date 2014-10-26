@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "tiff_util.h"
+#include "image_util.h"
 
 void test();
 
@@ -56,6 +57,15 @@ int main(int argc, char const *argv[]) {
 		printf("%ld ", rData[i]);
 	}
 	printf("\n");
+	
+
+
+	// Calculate Center Point.
+	CXPixelPoint p;
+	calculateCenterPoint(rParas->width, rParas->height, rData, &p);
+	printf("Center:(%d, %d)=%ld\n", p.x, p.y, p.value);
+
+
 	free(rParas);
 	free(rData);
 

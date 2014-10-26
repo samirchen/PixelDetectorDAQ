@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "tiff_util.h"
-//#include "../common/dieWithError.h"
 //#include "../common/cpuUsage.h"
 
 
@@ -12,9 +11,6 @@ TiffParas Paras;
 /* ######################## Method Declare ######################## */
 /*
 // ================= Out of this file. ================
-// In "dieWithError.c".
-void dieWithError(const char *errorMessage);
-
 // In "cpuUsage.c".
 void getWholeCPUStatus(ProcStat* ps);
 float calWholeCPUUse(ProcStat* ps1, ProcStat* ps2);
