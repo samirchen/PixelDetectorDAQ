@@ -1,12 +1,20 @@
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "tiff_util.h"
+#include <map>
 #include "image_util.h"
+
+extern "C" {
+	#include "tiff_util.h"
+}
+
+using namespace std;
 
 
 /* ######################## Method Declare ######################## */
 // ================= Out of this file. ================
+/*
 // In "image_util.c".
 void calculateCenterPoint(int width, const int height, const long* pixelData, CXPixelPoint* center);
 void calculateIQData(const int width, const int height, const long* pixelData, const CXPixelPoint* center, int iq2map);
@@ -16,7 +24,7 @@ void prepareAndWrite(TiffParas* paras, long* pixelData, const char* fileName);
 // Read TIFF.
 void readTIFFParas(TiffParas* paras, const char* fileName);
 void readTIFFPixelsData(const TiffParas* paras, long* pixelData, const char* fileName);
-
+*/
 
 // ================= In this file. ====================
 // Method Declare.
@@ -113,7 +121,7 @@ void test() {
 	}
 
 	printf("Hello\n");
-	char* str = "abc";
+	const char* str = "abc";
 	size_t len = strlen(str);
 	printf("%zu\n", len);
 

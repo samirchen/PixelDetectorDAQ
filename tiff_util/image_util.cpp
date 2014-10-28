@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <map>
 #include "image_util.h"
+using namespace std;
 
 
 
