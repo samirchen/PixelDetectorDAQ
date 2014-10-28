@@ -4,15 +4,38 @@
 #include "tiff_util.h"
 #include "image_util.h"
 
+
+/* ######################## Method Declare ######################## */
+// ================= Out of this file. ================
+// In "image_util.c".
+void calculateCenterPoint(int width, const int height, const long* pixelData, CXPixelPoint* center);
+void calculateIQData(const int width, const int height, const long* pixelData, const CXPixelPoint* center, int iq2map);
+// In "tiff_util.c"
+// Write TIFF.
+void prepareAndWrite(TiffParas* paras, long* pixelData, const char* fileName);
+// Read TIFF.
+void readTIFFParas(TiffParas* paras, const char* fileName);
+void readTIFFPixelsData(const TiffParas* paras, long* pixelData, const char* fileName);
+
+
+// ================= In this file. ====================
+// Method Declare.
 void test();
+
+
 
 int main(int argc, char const *argv[]) {
 	
 	//test();
+	//return 0;
 	
+	int i = 0;
+
+	/*
 	// Write Data to TIFF.
 	//// Tiff paras.
-	TiffParas* paras = (TiffParas*) malloc(sizeof(TiffParas));
+	TiffParas* paras = (TiffParas*) malloc(sizeof(TiffParas)); // Use pointer.
+	memset(paras, 0, sizeof(TiffParas)); // Must not forget to bezero paras.
 	paras->isLittleEndian = 1;
 	paras->version = 0x2A;
 	paras->firstIFDOffset = 0x82;
@@ -30,29 +53,34 @@ int main(int argc, char const *argv[]) {
 	paras->yResolutionB = 7;
 	paras->imageDescription = "image description";
 	//// Tiff pixel data.
-	long* data = (long*) malloc(sizeof(long)*paras->width*paras->height);
-	int i = 0;
-	for (i = 0; i < paras->width*paras->height; ++i) {
+	int size = paras->width*paras->height;
+	long* data = (long*) malloc(sizeof(long)*size);
+	memset(data, 0, sizeof(long)*size);
+	for (i = 0; i < size; ++i) {
 		data[i] = 100+i;
 	}
 	//// Prepare and write.
 	prepareAndWrite(paras, data, "sample.tif");
 	//// Clean.
 	free(data);
+	data = NULL;
 	free(paras);
-
+	paras = NULL;
+	*/
 
 	// Read Data from TIFF.
-	TiffParas* rParas = (TiffParas*) malloc(sizeof(TiffParas));
-	readTIFFParas(rParas, "sample.tif");
-	printf("Image Width: %ld\n", rParas->width);
-	printf("Image Height: %ld\n", rParas->height);
-	printf("Bits Per Sample: %d\n", rParas->bitsPerSample);
-	printf("Strip Offset: %ld\n", rParas->stripOffset);
-	long size = rParas->width*rParas->height;
-	long* rData = (long*) malloc(sizeof(long)*size);
-	readTIFFPixelsData(rParas, rData, "sample.tif");
-	long printLimit = size > 1000 ? 1000 : size;
+	TiffParas rParas; // Not use pointer.
+	memset(&rParas, 0, sizeof(TiffParas)); // Must not forget to bezero paras.
+	readTIFFParas(&rParas, "csclp5.tif");
+	printf("Image Width: %ld\n", rParas.width);
+	printf("Image Height: %ld\n", rParas.height);
+	printf("Bits Per Sample: %d\n", rParas.bitsPerSample);
+	printf("Strip Offset: %ld\n", rParas.stripOffset);
+	long rSize = rParas.width*rParas.height;
+	long* rData = (long*) malloc(sizeof(long)*rSize);
+	memset(rData, 0, sizeof(long)*rSize);
+	readTIFFPixelsData(&rParas, rData, "csclp5.tif");
+	long printLimit = rSize > 1000 ? 1000 : rSize;
 	for (i = 0; i < printLimit; i++) {
 		printf("%ld ", rData[i]);
 	}
@@ -61,18 +89,20 @@ int main(int argc, char const *argv[]) {
 
 
 	// Calculate Center Point.
-	CXPixelPoint p;
-	calculateCenterPoint(rParas->width, rParas->height, rData, &p);
-	printf("Center:(%d, %d)=%ld\n", p.x, p.y, p.value);
+	CXPixelPoint centerPoint;
+	calculateCenterPoint(rParas.width, rParas.height, rData, &centerPoint);
+	printf("Center:(%d, %d)=%ld\n", centerPoint.x, centerPoint.y, centerPoint.value);
 
-
-	free(rParas);
 	free(rData);
+	rData = NULL;
 
 	return 0;
 }
 
 void test() {
+
+	long l = 4294967296;
+	printf("%lu %ld\n", sizeof(short), l);
 
 	int check = 0x1;
 	if (*(char*)&check == 0x1) {

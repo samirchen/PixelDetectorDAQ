@@ -9,7 +9,7 @@ typedef struct cxPixelPoint {
 } CXPixelPoint;
 
 // API.
-void calculateCenterPoint(const int width, const int height, const long* pixelData, CXPixelPoint* point);
+void calculateCenterPoint(int width, const int height, const long* pixelData, CXPixelPoint* center);
 void calculateIQData(const int width, const int height, const long* pixelData, const CXPixelPoint* center, int iq2map);
 
 #endif // IMAGE_UTIL_H

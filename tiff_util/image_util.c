@@ -4,16 +4,32 @@
 
 
 
-void calculateCenterPoint(const int width, const int height, const long* pixelData, CXPixelPoint* point) {
+void calculateCenterPoint(const int width, const int height, const long* pixelData, CXPixelPoint* center) {
 
-	point->x = 10;
-	point->y = 10;
-	point->value = 8;
+	center->x = -1;
+	center->y = -1;
+	center->value = -1;
 
-	// Step 1: Find the point with the max count.
+
+	// Step 1: Find the	point with the max count as center.
+	int size = width*height;
+	CXPixelPoint maxValuePoint;
 	int maxIndex = 0;
+	long maxValue = pixelData[maxIndex];
+	int i = 0;
+	for (i = 1; i < size; i++) {
+		if (pixelData[i] > maxValue) {
+			maxIndex = i;
+			maxValue = pixelData[i];
+		}
+	}
+	maxValuePoint.x = maxIndex%width;
+	maxValuePoint.y = maxIndex/width;
+	maxValuePoint.value = maxValue;
 
-	// Step 2: Find the darkest point around the brightest point as center.
+	center->x = maxValuePoint.x;
+	center->y = maxValuePoint.y;
+	center->value = maxValuePoint.value;
 
 
 }

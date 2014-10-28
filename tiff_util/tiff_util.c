@@ -512,8 +512,17 @@ void readTIFFPixelsData(const TiffParas* paras, long* pixelData, const char* fil
 	int i = 0;
 	for (i = 0; i < size; i++) {
 		long value = 0;
-		fread(&value, paras->bitsPerSample/8, 1, fp);
-		pixelData[i] = value;
+		int typeLen = paras->bitsPerSample/8;
+		fread(&value, typeLen, 1, fp);
+		if (typeLen == 2) {
+			pixelData[i] = (short)value;
+		}
+		else if (typeLen == 4) {
+			pixelData[i] = (int)value;
+		}
+		else { // long
+			pixelData[i] = value;
+		}
 	}
 	
 	fclose(fp);
