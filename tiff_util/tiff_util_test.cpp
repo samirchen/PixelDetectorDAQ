@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <map>
+#include <sys/time.h>
 #include "image_util.h"
 
 extern "C" {
@@ -64,6 +65,10 @@ int main(int argc, char const *argv[]) {
 	*/
 
 	// Read Data from TIFF.
+	struct timeval t1, t2;
+	gettimeofday(&t1, NULL);
+	double timeSpan = 0.0;
+
 	TiffParas rParas; // Not use pointer.
 	memset(&rParas, 0, sizeof(TiffParas)); // Must not forget to bezero paras.
 	readTIFFParas(&rParas, "csclp5.tif");
@@ -90,13 +95,19 @@ int main(int argc, char const *argv[]) {
 
 	map<long, CXIQData> iq2map;
 	calculateIQData(rParas.width, rParas.height, rData, &centerPoint, iq2map);
-	CXIQData data = iq2map[0];
-	printf("Data:(%ld, %.2f, %.2f, %d, %d, %d)\n", data.q2, data.averageI, data.totalI, data.normalPixelCount, data.badPixelCount, data.gapPixelCount);
 
-	printf("%lu\n", iq2map.size());
+	gettimeofday(&t2, NULL);
+	timeSpan = (double) (t2.tv_sec-t1.tv_sec) + (double) t2.tv_usec*1e-6 - (double) t1.tv_usec*1e-6;
+	printf("Time Span: %lf s\n", timeSpan);
+
+	// Print test message.
+	CXIQData data = iq2map[0];
+	printf("Data[0]:(%ld, %.2f, %.2f, %d, %d, %d)\n", data.q2, data.averageI, data.totalI, data.normalPixelCount, data.badPixelCount, data.gapPixelCount);
+
+	printf("Map Size: %lu\n", iq2map.size());
 	for (map<long, CXIQData>::iterator itr = iq2map.begin(); itr != iq2map.end(); itr++) {
 		CXIQData d = itr->second;
-		if (d.averageI > 1000) {
+		if (d.averageI > 20000) {
 			printf("Data:(%ld, %.2f, %.2f, %d, %d, %d)\n", d.q2, d.averageI, d.totalI, d.normalPixelCount, d.badPixelCount, d.gapPixelCount);
 		}
 	}
