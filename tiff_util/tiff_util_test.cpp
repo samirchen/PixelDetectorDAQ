@@ -13,19 +13,6 @@ using namespace std;
 
 
 /* ######################## Method Declare ######################## */
-// ================= Out of this file. ================
-/*
-// In "image_util.c".
-void calculateCenterPoint(int width, const int height, const long* pixelData, CXPixelPoint* center);
-void calculateIQData(const int width, const int height, const long* pixelData, const CXPixelPoint* center, int iq2map);
-// In "tiff_util.c"
-// Write TIFF.
-void prepareAndWrite(TiffParas* paras, long* pixelData, const char* fileName);
-// Read TIFF.
-void readTIFFParas(TiffParas* paras, const char* fileName);
-void readTIFFPixelsData(const TiffParas* paras, long* pixelData, const char* fileName);
-*/
-
 // ================= In this file. ====================
 // Method Declare.
 void test();
@@ -100,6 +87,19 @@ int main(int argc, char const *argv[]) {
 	CXPixelPoint centerPoint;
 	calculateCenterPoint(rParas.width, rParas.height, rData, &centerPoint);
 	printf("Center:(%d, %d)=%ld\n", centerPoint.x, centerPoint.y, centerPoint.value);
+
+	map<long, CXIQData> iq2map;
+	calculateIQData(rParas.width, rParas.height, rData, &centerPoint, iq2map);
+	CXIQData data = iq2map[0];
+	printf("Data:(%ld, %.2f, %.2f, %d, %d, %d)\n", data.q2, data.averageI, data.totalI, data.normalPixelCount, data.badPixelCount, data.gapPixelCount);
+
+	printf("%lu\n", iq2map.size());
+	for (map<long, CXIQData>::iterator itr = iq2map.begin(); itr != iq2map.end(); itr++) {
+		CXIQData d = itr->second;
+		if (d.averageI > 1000) {
+			printf("Data:(%ld, %.2f, %.2f, %d, %d, %d)\n", d.q2, d.averageI, d.totalI, d.normalPixelCount, d.badPixelCount, d.gapPixelCount);
+		}
+	}
 
 	free(rData);
 	rData = NULL;
