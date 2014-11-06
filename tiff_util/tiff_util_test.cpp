@@ -100,6 +100,10 @@ int main(int argc, char const *argv[]) {
 	timeSpan = (double) (t2.tv_sec-t1.tv_sec) + (double) t2.tv_usec*1e-6 - (double) t1.tv_usec*1e-6;
 	printf("Time Span: %lf s\n", timeSpan);
 
+	// Count invalid pixel.
+	int invalidPixelCount = countInvalidPixels(rParas.width, rParas.height, rData);
+	printf("Invalid Pixels Count: %d\n", invalidPixelCount);
+
 	// Print test message.
 	CXIQData data = iq2map[0];
 	printf("Data[0]:(%ld, %.2f, %.2f, %d, %d, %d)\n", data.q2, data.averageI, data.totalI, data.normalPixelCount, data.badPixelCount, data.gapPixelCount);

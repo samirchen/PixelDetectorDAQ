@@ -98,4 +98,16 @@ void calculateIQData(const int width, const int height, const long* pixelData, c
 
 }
 
+int countInvalidPixels(const int width, const int height, const long* pixelData) {
+	int count = 0;
+	int size = width*height;
+	int i = 0;
+	for (i = 0; i < size; i++) {
+		CXPixelValueType type = getPixelValueType(pixelData[i]);
+		if (type != CXPixelValueTypeValid) {
+			count++;
+		}
+	}
 
+	return count;
+}

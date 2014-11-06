@@ -56,5 +56,7 @@ typedef struct cxIQData  {
 // API.
 void calculateCenterPoint(int width, const int height, const long* pixelData, CXPixelPoint* center);
 void calculateIQData(const int width, const int height, const long* pixelData, const CXPixelPoint* center, std::map<long, CXIQData> & iq2map);
+int countInvalidPixels(const int width, const int height, const long* pixelData);
+
 
 #endif // IMAGE_UTIL_H
