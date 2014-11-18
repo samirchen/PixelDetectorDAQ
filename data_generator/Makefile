@@ -7,7 +7,7 @@ data_generator.o: cpuUsage.o data_generator.cpp
 	g++ -c data_generator.cpp
 
 cpuUsage.o: ../common/cpuUsage.h ../common/cpuUsage.c
-	g++ -c ../common/cpuUsage.c
+	gcc -c ../common/cpuUsage.c
 
 clean:
 	rm -rf exe.o

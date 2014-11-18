@@ -1,6 +1,6 @@
 objects = cpuUsage.o data_acquisitor.o
 main: $(objects)
-	gcc -g -pthread $(objects) -o exe.o 
+	gcc -g $(objects) -o exe.o 
 	rm -rf $(objects)
 
 data_acquisitor.o: cpuUsage.o data_acquisitor.c
@@ -10,4 +10,4 @@ cpuUsage.o: ../common/cpuUsage.h ../common/cpuUsage.c
 	gcc -c ../common/cpuUsage.c
 
 clean:
-	rm -rf $(objects) 
+	rm -rf exe.o
