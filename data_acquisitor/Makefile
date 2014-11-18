@@ -1,6 +1,6 @@
 objects = cpuUsage.o data_acquisitor.o
 main: $(objects)
-	gcc -g $(objects) -o exe.o 
+	gcc -g -pthread $(objects) -o exe.o 
 	rm -rf $(objects)
 
 data_acquisitor.o: cpuUsage.o data_acquisitor.c
