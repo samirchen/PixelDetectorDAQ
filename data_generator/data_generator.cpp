@@ -9,14 +9,18 @@
 #include <sys/time.h> // for timeval.
 #include <pthread.h> // for pthread_create().
 #include <sys/syscall.h> // for SYS_gettid.
+#include <map>
 #include "../common/cpuUsage.h"
+#include "../tiff_util/image_util.h"
+
+extern "C" {
+	#include "../tiff_util/tiff_util.h"
+}
+
 using namespace std;
 
 /* ######################## Local Global Data Structure ######################## */
 // ================= Const =================
-#define PIXEL_MATRIX_WIDTH 15//400
-#define PIXEL_MATRIX_HEIGHT 15//400
-
 #define MAX_VALUE 2097151 // 2^21-1 
 
 //#define SERVPORT 5555
@@ -26,18 +30,20 @@ using namespace std;
 
 
 // ================== Parameters when using ==================
-struct PARAS {
+struct GENPARAS {
 	// Server.
 	char* serverIP;
 	unsigned short serverPort;
 
-} Paras;
+} GenParas;
 
 // ================== Global ==================
-int Pixel_Matrix[PIXEL_MATRIX_HEIGHT*PIXEL_MATRIX_WIDTH];
+int* Pixel_Matrix;
+int Pixel_Count;
 
 
 /* ######################## Method Declare ######################## */
+/*
 // ================= Out of this file. ================
 // In "cpuUsage.c".
 void getWholeCPUStatus(ProcStat* ps);
@@ -48,7 +54,7 @@ float calProcessCPUUse(ProcStat* ps1, ProcPidStat* pps1, ProcStat* ps2, ProcPidS
 // Thread "/proc/<pid>/task/<tid>" has the same data structure as process, ProcPidStat.
 void getThreadCPUStatus(ProcPidStat* pps, pid_t pid, pid_t tid);
 float calThreadCPUUse(ProcStat* ps1, ProcPidStat* pps1, ProcStat* ps2, ProcPidStat* pps2);
-
+*/
 
 // ================= In this file. ====================
 // Method Declare.
@@ -59,18 +65,18 @@ void sendData();
 int main(int argc, char* argv[]) {
 
 	// Default parameter values.
-	Paras.serverIP = (char*) "127.0.0.1";
-	Paras.serverPort = 5555;
+	GenParas.serverIP = (char*) "127.0.0.1";
+	GenParas.serverPort = 5555;
 	// Get paramerters from inputing.
 	int i = 1;
 	for (i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-s") == 0) {
 			i++;
-			Paras.serverIP = argv[i];
+			GenParas.serverIP = argv[i];
 		}
 		else if (strcmp(argv[i], "-p") == 0) {
 			i++;
-			Paras.serverPort = atoi(argv[i]);
+			GenParas.serverPort = atoi(argv[i]);
 		}
 		else if (strcmp(argv[i], "--help") == 0) {
 			printUsage();
@@ -88,6 +94,10 @@ int main(int argc, char* argv[]) {
 	genData();
 
 	sendData();
+
+	free(Pixel_Matrix);
+	Pixel_Matrix = NULL;
+	Pixel_Count = 0;
 	
 	return 0;
 }
@@ -98,12 +108,39 @@ void printUsage() {
 }
 
 void genData() {
-	srand((unsigned) time(NULL));
 
 	int i = 0;
-	for (i = 0; i < PIXEL_MATRIX_HEIGHT*PIXEL_MATRIX_WIDTH; i++) {
-		Pixel_Matrix[i] = htons(i);//rand() % MAX_VALUE;
+
+	// Get data from tiff file.
+	TiffParas rParas; // Not use pointer.
+	memset(&rParas, 0, sizeof(TiffParas)); // Must not forget to bezero paras.
+	readTIFFParas(&rParas, "../tiff_util/csclp5.tif");
+	printf("Image Width: %ld\n", rParas.width);
+	printf("Image Height: %ld\n", rParas.height);
+	printf("Bits Per Sample: %d\n", rParas.bitsPerSample);
+	printf("Strip Offset: %ld\n", rParas.stripOffset);
+	long rSize = rParas.width*rParas.height;
+	long* rData = (long*) malloc(sizeof(long)*rSize);
+	memset(rData, 0, sizeof(long)*rSize);
+	readTIFFPixelsData(&rParas, rData, "../tiff_util/csclp5.tif");
+	long printLimit = rSize > 1000 ? 1000 : rSize;
+	for (i = 0; i < printLimit; i++) {
+		printf("%ld ", rData[i]);
 	}
+	printf("\n");
+
+
+
+	//srand((unsigned) time(NULL));
+	Pixel_Count = rSize;
+	Pixel_Matrix = (int*) malloc(sizeof(int)*Pixel_Count);
+	memset(rData, 0, sizeof(int)*Pixel_Count);
+	for (i = 0; i < Pixel_Count; i++) {
+		Pixel_Matrix[i] = htons((int) rData[i]);//rand() % MAX_VALUE;
+	}
+
+	free(rData);
+	rData = NULL;
 }
 
 void sendData() {
@@ -111,12 +148,12 @@ void sendData() {
 	struct sockaddr_in servAddr; // Server address.
 	//char* package;
 
-	unsigned short servPort = Paras.serverPort;//SERVPORT;
-	const char* servIP = Paras.serverIP;//SERVIP;
+	unsigned short servPort = GenParas.serverPort;//SERVPORT;
+	const char* servIP = GenParas.serverIP;//SERVIP;
 	//unsigned int pkgSize = PKGSIZE;;
 	//unsigned int interval = INTERVAL;
 
-	unsigned int pixelDataSize = PIXEL_MATRIX_HEIGHT * PIXEL_MATRIX_WIDTH * sizeof(int);
+	unsigned int pixelDataSize = Pixel_Count * sizeof(int);
 	
 
 	// Create a reliable, stream socket using TCP.

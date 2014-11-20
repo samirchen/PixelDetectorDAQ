@@ -12,16 +12,16 @@
 /* ######################## Local Global Data Structure ######################## */
 // ================== Const =================
 #define MAXPENDING 5
-#define DATASIZE (20*20)
+#define DATASIZE (400)
 //#define RCVBUFSIZE (400*400)
 //#define SERVPORT 5555
 
 // ================== Paramerters when using ==================
-struct PARAS {
+struct DAQPARAS {
 	// Server.
 	unsigned short serverPort;
 
-} Paras;
+} DAQParas;
 
 
 // ================== Global ==================
@@ -102,7 +102,7 @@ pid_t gettid();
 unsigned long long int threadRTag = 0; // Receive thread tag.
 pthread_mutex_t threadRTagLock; // Receive thread tag lock.
 // Thread to receive data.
-void* threadReceive(void* arg); // accept a ConnecitonSockPool* .
+void* threadReceive(void* arg); // accept a ConnecitonSockPool* . Deprecated.
 void* threadReceiveConnection(void* arg); // accept a Connection* .
 
 // Could accept multiple connections, and deal with them in different threads.
@@ -115,13 +115,13 @@ void recvMultiConnsDataWithMultiThreads();
 int main(int argc, char* argv[]) {
 
 	// Default parameter values.
-	Paras.serverPort = 5555;
+	DAQParas.serverPort = 5555;
 	// Get parameters from inputing.
 	int i = 1;
 	for (i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-p") == 0) {
 			i++;
-			Paras.serverPort = atoi(argv[i]);
+			DAQParas.serverPort = atoi(argv[i]);
 		}
 		else if (strcmp(argv[i], "--help") == 0) {
 			printUsage();
@@ -264,6 +264,8 @@ void* threadReceiveConnection(void* arg) {
     gettimeofday(&t1, NULL);
     double timeSpan = 0.0;
 
+    
+    
     while (1) {
         if ((recvMsgSize = recv(connectionSock, buffer, DATASIZE*sizeof(int), 0)) < 0) {
             perror("threadReceiveConnection recv() failed");
@@ -279,21 +281,23 @@ void* threadReceiveConnection(void* arg) {
             }
             printf("\n");
 
-			// Write data to file(named by client IP-Port).
-			char fileName[100];
-			sprintf(fileName, "%s-%d-%d.data", inet_ntoa(clientAddress.sin_addr), ntohs(clientAddress.sin_port), connectionSock);
-			printf("File Name: %s\n", fileName);			
 
-			FILE* fp;
-			fp = fopen(fileName, "w");
-			if (fp == NULL) {
-				perror("threadReceiveConnection fopen() failed");	
-				exit(1);
-			}
-			for (i = 0; i < DATASIZE; i++) {
-				fprintf(fp, "%d ", ntohs(buffer[i]));
-			}
-			fclose(fp);
+            FILE* fp;
+            // Write data to file(named by client IP-Port).
+            char fileName[100];
+            sprintf(fileName, "%s-%d-%d.data", inet_ntoa(clientAddress.sin_addr), ntohs(clientAddress.sin_port), connectionSock);
+            printf("File Name: %s\n", fileName);            
+            fp = fopen(fileName, "w");
+            if (fp == NULL) {
+                perror("threadReceiveConnection fopen() failed");   
+                exit(1);
+            }
+
+            for (i = 0; i < DATASIZE; i++) {
+                fprintf(fp, "%d ", ntohs(buffer[i]));
+            }
+			
+            fclose(fp);
 
 			/*
 			// Test write file.
@@ -314,7 +318,7 @@ void* threadReceiveConnection(void* arg) {
             break;
         }
     }
-
+    
 
 /*
 	// Calculate CPU and time consume.
@@ -350,7 +354,7 @@ void* threadReceiveConnection(void* arg) {
 // Could accept multiple connections, and deal with them in different threads.
 void recvMultiConnsDataWithMultiThreads() {
 	printf("recvMultiConnsDataWithMultiThreads\n");
-    unsigned short servPort = Paras.serverPort;//SERVPORT;
+    unsigned short servPort = DAQParas.serverPort;//SERVPORT;
 
 	int listenSock, connectionSock; // Listen on listenSock, new connection on connectionSock.
     struct sockaddr_in servAddr; // Server address info.
@@ -469,7 +473,7 @@ void recvMultiConnsDataOneByOne() {
 	struct sockaddr_in clntAddr; // Client address.
 	unsigned int clntLen; // Length of client address data structure.
 
-	unsigned short servPort = Paras.serverPort;//SERVPORT;
+	unsigned short servPort = DAQParas.serverPort;//SERVPORT;
 	printf("server port: %d\n", servPort);
 
 	// Create socket for incoming connections.

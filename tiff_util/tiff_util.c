@@ -5,7 +5,7 @@
 //#include "../common/cpuUsage.h"
 
 
-TiffParas Paras;
+TiffParas TParas;
 
 
 /* ######################## Method Declare ######################## */
@@ -137,7 +137,7 @@ void writeInteger(long i, int len, FILE* fp) {
 	}
 	else {
 
-		if (!Paras.isLittleEndian) {
+		if (!TParas.isLittleEndian) {
 			if (len == 1) {
 			
 			}
@@ -162,45 +162,45 @@ void writeInteger(long i, int len, FILE* fp) {
 void prepareAndWrite(TiffParas* paras, long* pixelData, const char* fileName) {
 
 	if (paras == NULL) {
-		printf("Set default tiff Paras.\n");
+		printf("Set default tiff TParas.\n");
 		// Set default parameters.
-		Paras.isLittleEndian = 1;
-		Paras.version = 0x2A;
-		Paras.firstIFDOffset = 0x82;
+		TParas.isLittleEndian = 1;
+		TParas.version = 0x2A;
+		TParas.firstIFDOffset = 0x82;
 
-		Paras.width = 10;
-		Paras.height = 10;
-		Paras.bitsPerSample = 32;
-		Paras.stripOffset = 2048;
-		Paras.artist = "artist";
-		Paras.datetime = "2014:07:07 22:30:23";
-		Paras.model = "model";
-		Paras.software = "software";
-		Paras.xResolutionA = 1043;
-		Paras.xResolutionB = 7;
-		Paras.yResolutionA = 1043;
-		Paras.yResolutionB = 7;
-		Paras.imageDescription = "image description";
+		TParas.width = 10;
+		TParas.height = 10;
+		TParas.bitsPerSample = 32;
+		TParas.stripOffset = 2048;
+		TParas.artist = "artist";
+		TParas.datetime = "2014:07:07 22:30:23";
+		TParas.model = "model";
+		TParas.software = "software";
+		TParas.xResolutionA = 1043;
+		TParas.xResolutionB = 7;
+		TParas.yResolutionA = 1043;
+		TParas.yResolutionB = 7;
+		TParas.imageDescription = "image description";
 	}
 	else {
 		// Set parameters.
-		Paras.isLittleEndian = paras->isLittleEndian;
-		Paras.version = paras->version;
-		Paras.firstIFDOffset = paras->firstIFDOffset;
+		TParas.isLittleEndian = paras->isLittleEndian;
+		TParas.version = paras->version;
+		TParas.firstIFDOffset = paras->firstIFDOffset;
 
-		Paras.width = paras->width;
-		Paras.height = paras->height;
-		Paras.bitsPerSample = paras->bitsPerSample;
-		Paras.stripOffset = paras->stripOffset;
-		Paras.artist = paras->artist;
-		Paras.datetime = paras->datetime;
-		Paras.model = paras->model;
-		Paras.software = paras->software;
-		Paras.xResolutionA = paras->xResolutionA;
-		Paras.xResolutionB = paras->xResolutionB;
-		Paras.yResolutionA = paras->yResolutionA;
-		Paras.yResolutionB = paras->yResolutionB;
-		Paras.imageDescription = paras->imageDescription;
+		TParas.width = paras->width;
+		TParas.height = paras->height;
+		TParas.bitsPerSample = paras->bitsPerSample;
+		TParas.stripOffset = paras->stripOffset;
+		TParas.artist = paras->artist;
+		TParas.datetime = paras->datetime;
+		TParas.model = paras->model;
+		TParas.software = paras->software;
+		TParas.xResolutionA = paras->xResolutionA;
+		TParas.xResolutionB = paras->xResolutionB;
+		TParas.yResolutionA = paras->yResolutionA;
+		TParas.yResolutionB = paras->yResolutionB;
+		TParas.imageDescription = paras->imageDescription;
 	}
 	
 
@@ -221,21 +221,21 @@ void prepareAndWrite(TiffParas* paras, long* pixelData, const char* fileName) {
 	enImageWidth.tag = ENTagImageWidth;
 	enImageWidth.type = ENTypeLong;
 	enImageWidth.count = 0x01;
-	enImageWidth.valueOrOffset = Paras.width;
+	enImageWidth.valueOrOffset = TParas.width;
 	firstIFD.entities[ENIndexImageWidth] = enImageWidth;
 	// 3.
 	TiffIFDEntity enImageHeight;
 	enImageHeight.tag = ENTagImageHeight;
 	enImageHeight.type = ENTypeLong;
 	enImageHeight.count = 0x01;
-	enImageHeight.valueOrOffset = Paras.height;
+	enImageHeight.valueOrOffset = TParas.height;
 	firstIFD.entities[ENIndexImageHeight] = enImageHeight;
 	// 4.
 	TiffIFDEntity enBitsPerSample;
 	enBitsPerSample.tag = ENTagBitsPerSample;
 	enBitsPerSample.type = ENTypeShort;
 	enBitsPerSample.count = 0x01;
-	enBitsPerSample.valueOrOffset = Paras.bitsPerSample;
+	enBitsPerSample.valueOrOffset = TParas.bitsPerSample;
 	firstIFD.entities[ENIndexBitsPerSample] = enBitsPerSample;
 	// 5.
 	TiffIFDEntity enCompression;
@@ -270,7 +270,7 @@ void prepareAndWrite(TiffParas* paras, long* pixelData, const char* fileName) {
 	enStripOffsets.tag = ENTagStripOffsets;
 	enStripOffsets.type = ENTypeLong;
 	enStripOffsets.count = 0x01;
-	enStripOffsets.valueOrOffset = Paras.stripOffset;
+	enStripOffsets.valueOrOffset = TParas.stripOffset;
 	firstIFD.entities[ENIndexStripOffsets] = enStripOffsets;
 	// 10.
 	TiffIFDEntity enRowsPerStrip;
@@ -284,7 +284,7 @@ void prepareAndWrite(TiffParas* paras, long* pixelData, const char* fileName) {
 	enStripByteCounts.tag = ENTagStripByteCounts;
 	enStripByteCounts.type = ENTypeLong;
 	enStripByteCounts.count = 0x01;
-	enStripByteCounts.valueOrOffset = Paras.bitsPerSample/8 * Paras.width * Paras.height;
+	enStripByteCounts.valueOrOffset = TParas.bitsPerSample/8 * TParas.width * TParas.height;
 	firstIFD.entities[ENIndexStripByteCounts] = enStripByteCounts;
 	// 12.
 	TiffIFDEntity enXResolution;
@@ -330,7 +330,7 @@ void prepareAndWrite(TiffParas* paras, long* pixelData, const char* fileName) {
 	firstIFD.entities[ENIndexSampleFormat] = enSampleFormat;
 	// Next IFD offset or 0 if none.
 	firstIFD.nextIFDOffset = 0x0;
-	Paras.ifd = firstIFD;
+	TParas.ifd = firstIFD;
 
 	// Write tiff.
 	writePixelsDataToTIFF(pixelData, fileName);
@@ -352,7 +352,7 @@ void writePixelsDataToTIFF(const long* pixelData, const char* fileName) {
 	// ========= Header ===========
 	// Byte order. 0-1, 2 bytes.
 	int byteOrder = 0x4949;
-	if (Paras.isLittleEndian) {
+	if (TParas.isLittleEndian) {
 		byteOrder = 0x4949;
 	}
 	else {
@@ -362,62 +362,62 @@ void writePixelsDataToTIFF(const long* pixelData, const char* fileName) {
 	writeInteger(byteOrder, LByteOrder, fp);
 
 	// Version. 2-3, 2 bytes.
-	//fwrite(&Paras.version, LVersion, 1, fp);
-	writeInteger(Paras.version, LVersion, fp);
+	//fwrite(&TParas.version, LVersion, 1, fp);
+	writeInteger(TParas.version, LVersion, fp);
 
 	// First IFD offset. 4-7, 4 bytes.
-	//fwrite(&Paras.firstIFDOffset, LFirstIFDOffset, 1, fp);  
-	writeInteger(Paras.firstIFDOffset, LFirstIFDOffset, fp);
+	//fwrite(&TParas.firstIFDOffset, LFirstIFDOffset, 1, fp);  
+	writeInteger(TParas.firstIFDOffset, LFirstIFDOffset, fp);
 
 	// ======= Info ========
 	// Fill 0. 8-11, 4 bytes.
 	fill(0x00, 4, fp);
 
 	// Artist. 12-29, 18 bytes.
-	writeStr(Paras.artist, LArtist, fp);
+	writeStr(TParas.artist, LArtist, fp);
 
 	// DateTime. 30-61, 32 bytes.
-	writeStr(Paras.datetime, LDateTime, fp);
+	writeStr(TParas.datetime, LDateTime, fp);
 
 	// Model. 62-109, 48 bytes.
-	writeStr(Paras.model, LModel, fp);
+	writeStr(TParas.model, LModel, fp);
 
 	// Software. 110-129, 20 bytes.
-	writeStr(Paras.software, LSoftware, fp);
+	writeStr(TParas.software, LSoftware, fp);
 	
 
 	// ====== IFD ======
 	// IFD. 130-339, 210 bytes.
-	writeInteger(Paras.ifd.numOfDirEntities, LNumOfDirEntities, fp);
+	writeInteger(TParas.ifd.numOfDirEntities, LNumOfDirEntities, fp);
 	int i = 0;
-	for (i = 0; i < Paras.ifd.numOfDirEntities; ++i) {
-		TiffIFDEntity en = Paras.ifd.entities[i];
+	for (i = 0; i < TParas.ifd.numOfDirEntities; ++i) {
+		TiffIFDEntity en = TParas.ifd.entities[i];
 		writeInteger(en.tag, LDirEntityTag, fp);
 		writeInteger(en.type, LDirEntityType, fp);
 		writeInteger(en.count, LDirEntityCount, fp);
 		writeInteger(en.valueOrOffset, LDirEntityValueOrOffset, fp);
 	}
-	writeInteger(Paras.ifd.nextIFDOffset, LNextIFDOffset, fp);
+	writeInteger(TParas.ifd.nextIFDOffset, LNextIFDOffset, fp);
 
 	// XResolution. 340-347, 8 bytes.
-	writeInteger(Paras.xResolutionA, 4, fp);
-	writeInteger(Paras.xResolutionB, 4, fp);
+	writeInteger(TParas.xResolutionA, 4, fp);
+	writeInteger(TParas.xResolutionB, 4, fp);
 	// YResolution. 340-347, 8 bytes.
-	writeInteger(Paras.yResolutionA, 4, fp);
-	writeInteger(Paras.yResolutionB, 4, fp);
+	writeInteger(TParas.yResolutionA, 4, fp);
+	writeInteger(TParas.yResolutionB, 4, fp);
 
 	// Fill 0. 356-399, 44 bytes.
 	fill(0x00, 44, fp);
 
 	// ImageDescription. 400-887, 488 bytes.
-	writeStr(Paras.imageDescription, LImageDescription, fp);
+	writeStr(TParas.imageDescription, LImageDescription, fp);
 	
 	// Fill 0. 888-2047, 1160 byts.
 	fill(0x00, 1160, fp);
 
 	// Image Data.
-	for (i = 0; i < Paras.width*Paras.height; i++) {
-		writeInteger(pixelData[i], Paras.bitsPerSample/8, fp);
+	for (i = 0; i < TParas.width*TParas.height; i++) {
+		writeInteger(pixelData[i], TParas.bitsPerSample/8, fp);
 	}
 
 	fclose(fp);
