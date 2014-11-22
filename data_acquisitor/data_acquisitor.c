@@ -282,8 +282,9 @@ void* threadReceiveConnection(void* arg) {
             printf("\n");
 
 
-            FILE* fp;
+            
             // Write data to file(named by client IP-Port).
+            FILE* fp;
             char fileName[100];
             sprintf(fileName, "%s-%d-%d.data", inet_ntoa(clientAddress.sin_addr), ntohs(clientAddress.sin_port), connectionSock);
             printf("File Name: %s\n", fileName);            
