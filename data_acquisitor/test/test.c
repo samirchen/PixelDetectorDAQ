@@ -29,6 +29,9 @@ void* threadCall(void* arg) {
 
 int main () {
 
+	int i = 0;
+
+
 	// Test 1.
 	struct sockaddr_in servAddr;
 	memset(&servAddr, 0, sizeof(servAddr));
@@ -41,13 +44,14 @@ int main () {
 	printf("%s\n", fileName);
 
 	FILE* fp;
-	fp = fopen(fileName, "w");
-	fprintf(fp, "%d %d %s", 1, 2, "text");	
+	fp = fopen(fileName, "a+");
+	for (i = 0; i < 3; i++) {		
+		fprintf(fp, "%d %d %s\n", 1, 2, "text");	
+	}
 	fclose(fp);
 
-
+	/*
 	// Test thread to deal with file.
-	int i = 0;
 	for (i = 0; i < 9; i++) {
 		int* tag = (int*) malloc(sizeof(int));
 		*tag = i;
@@ -62,6 +66,7 @@ int main () {
 	for (;;) {
 
 	}
+	*/
 
 	return 0;
 }
