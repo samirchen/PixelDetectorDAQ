@@ -287,8 +287,8 @@ void* threadReceiveConnection(void* arg) {
             FILE* fp;
             char fileName[100];
             sprintf(fileName, "%s-%d-%d.data", inet_ntoa(clientAddress.sin_addr), ntohs(clientAddress.sin_port), connectionSock);
-            printf("File Name: %s\n", fileName);            
-            fp = fopen(fileName, "w");
+            printf("File Name: %s\n", fileName);
+            fp = fopen(fileName, "a+");
             if (fp == NULL) {
                 perror("threadReceiveConnection fopen() failed");   
                 exit(1);
@@ -297,7 +297,7 @@ void* threadReceiveConnection(void* arg) {
             for (i = 0; i < DATASIZE; i++) {
                 fprintf(fp, "%d ", ntohs(buffer[i]));
             }
-			
+			fprintf(fp, "\n");
             fclose(fp);
 
 			/*
