@@ -240,7 +240,8 @@ void* threadReceiveConnection(void* arg) {
 
 
     int buffer[DATASIZE];
-    bzero(buffer, DATASIZE*sizeof(int));
+    //bzero(buffer, DATASIZE*sizeof(int));
+    memset(buffer, 0, DATASIZE*sizeof(int));
 
     int recvMsgSize;
     unsigned long long int totalRecvMsgSize = 0;
@@ -264,10 +265,20 @@ void* threadReceiveConnection(void* arg) {
     gettimeofday(&t1, NULL);
     double timeSpan = 0.0;
 
-    
+
+    FILE* fp;
+    char fileName[100];
+    sprintf(fileName, "%s-%d-%d.data", inet_ntoa(clientAddress.sin_addr), ntohs(clientAddress.sin_port), connectionSock);
+    printf("File Name: %s\n", fileName);
+    fp = fopen(fileName, "a+");
+    if (fp == NULL) {
+        perror("threadReceiveConnection fopen() failed");   
+        exit(1);
+    }
     
     while (1) {
         if ((recvMsgSize = recv(connectionSock, buffer, DATASIZE*sizeof(int), 0)) < 0) {
+            fclose(fp);
             perror("threadReceiveConnection recv() failed");
 			exit(1);
         }
@@ -276,29 +287,22 @@ void* threadReceiveConnection(void* arg) {
             //printf("thread %u recvMsgSize: %d\n", (unsigned int) tid, recvMsgSize);
             //printf("thread %u totalRecvMsgSize: %lld\n", (unsigned int) tid, totalRecvMsgSize);
             int i = 0;
-            for (i = 0; i < DATASIZE; i++) {
-                printf("%d ", ntohs(buffer[i]));
-            }
-            printf("\n");
+            //for (i = 0; i < recvMsgSize/sizeof(int); i++) {
+            //    printf("%d ", ntohs(buffer[i]));
+            //}
+            //printf("\n");
 
-
+            //printf("Receive: %d\n", recvMsgSize);
+            
             
             // Write data to file(named by client IP-Port).
-            FILE* fp;
-            char fileName[100];
-            sprintf(fileName, "%s-%d-%d.data", inet_ntoa(clientAddress.sin_addr), ntohs(clientAddress.sin_port), connectionSock);
-            printf("File Name: %s\n", fileName);
-            fp = fopen(fileName, "a+");
-            if (fp == NULL) {
-                perror("threadReceiveConnection fopen() failed");   
-                exit(1);
-            }
+    
 
-            for (i = 0; i < DATASIZE; i++) {
+            for (i = 0; i < recvMsgSize/sizeof(int); i++) {
                 fprintf(fp, "%d ", ntohs(buffer[i]));
             }
 			fprintf(fp, "\n");
-            fclose(fp);
+            
 
 			/*
 			// Test write file.
@@ -319,7 +323,7 @@ void* threadReceiveConnection(void* arg) {
             break;
         }
     }
-    
+    fclose(fp);
 
 /*
 	// Calculate CPU and time consume.
