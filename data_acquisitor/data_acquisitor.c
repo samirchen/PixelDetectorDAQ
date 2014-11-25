@@ -296,8 +296,6 @@ void* threadReceiveConnection(void* arg) {
             
             
             // Write data to file(named by client IP-Port).
-    
-
             for (i = 0; i < recvMsgSize/sizeof(int); i++) {
                 fprintf(fp, "%d ", ntohs(buffer[i]));
             }

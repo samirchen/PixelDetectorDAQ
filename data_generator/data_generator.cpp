@@ -124,11 +124,17 @@ void genData() {
 	memset(rData, 0, sizeof(long)*rSize);
 	readTIFFPixelsData(&rParas, rData, "../tiff_util/csclp5.tif");
 	long printLimit = rSize > 1000 ? 1000 : rSize;
+	printf("Head:\n");
 	for (i = 0; i < printLimit; i++) {
 		printf("%ld ", rData[i]);
 	}
 	printf("\n");
 
+	printf("Tail:\n");
+	for (i = rSize-printLimit; i < rSize; i++) {
+		printf("%ld ", rData[i]);
+	}
+	printf("\n");
 
 
 	//srand((unsigned) time(NULL));
@@ -136,12 +142,8 @@ void genData() {
 	Pixel_Matrix = (int*) malloc(sizeof(int)*Pixel_Count);
 	memset(Pixel_Matrix, 0, sizeof(int)*Pixel_Count);
 	for (i = 0; i < Pixel_Count; i++) {
-		Pixel_Matrix[i] = htons(i%100000);//htons((int) rData[i]);//rand() % MAX_VALUE;
+		Pixel_Matrix[i] = htons((int) rData[i]);//rand() % MAX_VALUE;
 	}
-
-	printf("%d\n", ntohs(Pixel_Matrix[5460]));
-	printf("%d\n", ntohs(Pixel_Matrix[5461]));
-	printf("%d\n", ntohs(Pixel_Matrix[5462]));
 
 	free(rData);
 	rData = NULL;
