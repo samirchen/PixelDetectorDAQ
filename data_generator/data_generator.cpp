@@ -126,7 +126,7 @@ void genData() {
 	long printLimit = rSize > 1000 ? 1000 : rSize;
 	printf("Head:\n");
 	for (i = 0; i < printLimit; i++) {
-		printf("%ld ", rData[i]);
+		printf("%d ", ((int) rData[i]));
 	}
 	printf("\n");
 

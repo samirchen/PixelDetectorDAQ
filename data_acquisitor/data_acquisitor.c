@@ -8,6 +8,8 @@
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include "../common/cpuUsage.h"
+#include "../tiff_util/tiff_util.h"
+
 
 /* ######################## Local Global Data Structure ######################## */
 // ================== Const =================
@@ -238,6 +240,13 @@ void* threadReceiveConnection(void* arg) {
 	struct sockaddr_in serverAddress = conn->serverAddress;
 	struct sockaddr_in clientAddress = conn->clientAddress;
 
+    int Tiff_Width = 981;
+    int Tiff_Height = 1043;
+    int size = Tiff_Width*Tiff_Height;
+    long* data = (long*) malloc(sizeof(long)*size);
+    memset(data, 0, sizeof(long)*size);
+    int dataIndex = 0;
+
 
     int buffer[DATASIZE];
     //bzero(buffer, DATASIZE*sizeof(int));
@@ -296,8 +305,9 @@ void* threadReceiveConnection(void* arg) {
             
             
             // Write data to file(named by client IP-Port).
-            for (i = 0; i < recvMsgSize/sizeof(int); i++) {
+            for (i = 0; i < recvMsgSize/sizeof(int); i++,dataIndex++) {
                 fprintf(fp, "%d ", ntohs(buffer[i]));
+                data[dataIndex] = ntohs((long) buffer[i]);
             }
 			fprintf(fp, "\n");
             
@@ -318,10 +328,58 @@ void* threadReceiveConnection(void* arg) {
 
         }
         else {
+            printf("Received message size is 0, over!\n");
+
+            
+            // Write the data to tiff.
+            //// Tiff paras.
+            TiffParas* paras = (TiffParas*) malloc(sizeof(TiffParas)); // Use pointer.
+            memset(paras, 0, sizeof(TiffParas)); // Must not forget to bezero paras.
+            paras->isLittleEndian = 1;
+            paras->version = 0x2A;
+            paras->firstIFDOffset = 0x82;
+            paras->width = Tiff_Width;
+            paras->height = Tiff_Height;
+            paras->bitsPerSample = 32;
+            paras->stripOffset = 2048;
+            paras->artist = "artist";
+            paras->datetime = "2014:07:07 22:30:23";
+            paras->model = "model";
+            paras->software = "software";
+            paras->xResolutionA = 1043;
+            paras->xResolutionB = 7;
+            paras->yResolutionA = 1043;
+            paras->yResolutionB = 7;
+            paras->imageDescription = "image description";
+            
+            //// Print tiff pixel data.
+            int i = 0;
+            printf("Data Head:\n");
+            for (i = 0; i < 1000; i++) {
+                printf("%ld ", data[i]);
+            }
+            printf("\n");
+            printf("Data Tail:\n");
+            for (i = size-1000; i < size; i++) {
+                printf("%ld ", data[i]);
+            }
+            printf("\n");
+            
+            //// Prepare and write.
+            char tiffFileName[100];
+            sprintf(tiffFileName, "%s-%d-%d.tif", inet_ntoa(clientAddress.sin_addr), ntohs(clientAddress.sin_port), connectionSock);
+            prepareAndWrite(paras, data, tiffFileName);
+            //// Clean.
+            free(paras);
+            paras = NULL;
+
             break;
         }
     }
     fclose(fp);
+
+    free(data);
+    data = NULL;
 
 /*
 	// Calculate CPU and time consume.
