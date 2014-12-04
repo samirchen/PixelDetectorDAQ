@@ -20,5 +20,8 @@
 *.out
 *.app
 
+# Debug files
+*.dSYM
+
 # Data
 *.data

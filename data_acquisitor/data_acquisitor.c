@@ -198,7 +198,7 @@ void* threadReceive(void* arg) {
             //printf("thread %u totalRecvMsgSize: %lld\n", (unsigned int) tid, totalRecvMsgSize);
 			/*int i = 0;
             for (i = 0; i < DATASIZE; i++) {
-                printf("%d ", ntohs(buffer[i]));
+                printf("%ld ", (signed int)ntohl(buffer[i]));
             }
             printf("\n");*/
         }
@@ -297,7 +297,7 @@ void* threadReceiveConnection(void* arg) {
             //printf("thread %u totalRecvMsgSize: %lld\n", (unsigned int) tid, totalRecvMsgSize);
             int i = 0;
             //for (i = 0; i < recvMsgSize/sizeof(int); i++) {
-            //    printf("%d ", ntohs(buffer[i]));
+            //    printf("%ld ", (signed int)ntohl(buffer[i]));
             //}
             //printf("\n");
 
@@ -306,8 +306,8 @@ void* threadReceiveConnection(void* arg) {
             
             // Write data to file(named by client IP-Port).
             for (i = 0; i < recvMsgSize/sizeof(int); i++,dataIndex++) {
-                fprintf(fp, "%d ", ntohs(buffer[i]));
-                data[dataIndex] = ntohs((long) buffer[i]);
+                fprintf(fp, "%d ", (signed int)ntohl(buffer[i]));
+                data[dataIndex] = (signed int)ntohl(buffer[i]);
             }
 			fprintf(fp, "\n");
             
@@ -628,7 +628,7 @@ void recvMultiConnsDataOneByOne() {
                 //printf("%s\n", buffer);
 				/*int i = 0;
 				for (i = 0; i < DATASIZE; i++) {
-					printf("%d ", ntohs(Data_Buffer[i]));
+					printf("%ld ", (signed int)ntohl(Data_Buffer[i]));
 				}
 				printf("\n");*/
 			}

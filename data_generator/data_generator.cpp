@@ -142,7 +142,7 @@ void genData() {
 	Pixel_Matrix = (int*) malloc(sizeof(int)*Pixel_Count);
 	memset(Pixel_Matrix, 0, sizeof(int)*Pixel_Count);
 	for (i = 0; i < Pixel_Count; i++) {
-		Pixel_Matrix[i] = htons((int) rData[i]);//rand() % MAX_VALUE;
+		Pixel_Matrix[i] = htonl(rData[i]);//rand() % MAX_VALUE;
 	}
 
 	free(rData);

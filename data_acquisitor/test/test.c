@@ -31,7 +31,15 @@ int main () {
 
 	int i = 0;
 
+	long tmp = -1;
+	printf("%lu\n", sizeof(long));
+	printf("%lu\n", sizeof(int));
+	printf("%ld\n", tmp);
+	long tmp2 = htonl(tmp);
+	long tmp3 = (signed)ntohl(tmp2);
+	printf("%ld\n", tmp3);
 
+	/*
 	// Test 1.
 	struct sockaddr_in servAddr;
 	memset(&servAddr, 0, sizeof(servAddr));
@@ -49,6 +57,7 @@ int main () {
 		fprintf(fp, "%d %d %s\n", 1, 2, "text");	
 	}
 	fclose(fp);
+	*/
 
 	/*
 	// Test thread to deal with file.
