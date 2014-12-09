@@ -71,7 +71,7 @@ int main(int argc, char const *argv[]) {
 
 	TiffParas rParas; // Not use pointer.
 	memset(&rParas, 0, sizeof(TiffParas)); // Must not forget to bezero paras.
-	readTIFFParas(&rParas, "csclp5.tif");
+	readTIFFParas(&rParas, "csclp5.tif");//"../data_acquisitor/127.0.0.1-49654-4.tif");//
 	printf("Image Width: %ld\n", rParas.width);
 	printf("Image Height: %ld\n", rParas.height);
 	printf("Bits Per Sample: %d\n", rParas.bitsPerSample);
@@ -79,7 +79,7 @@ int main(int argc, char const *argv[]) {
 	long rSize = rParas.width*rParas.height;
 	long* rData = (long*) malloc(sizeof(long)*rSize);
 	memset(rData, 0, sizeof(long)*rSize);
-	readTIFFPixelsData(&rParas, rData, "csclp5.tif");
+	readTIFFPixelsData(&rParas, rData, "csclp5.tif");//"../data_acquisitor/127.0.0.1-49654-4.tif");//
 	long printLimit = rSize > 1000 ? 1000 : rSize;
 	for (i = 0; i < printLimit; i++) {
 		printf("%ld ", rData[i]);
