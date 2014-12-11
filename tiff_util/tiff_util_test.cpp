@@ -18,6 +18,7 @@ using namespace std;
 // Method Declare.
 void test();
 
+void sendIQDataToUIClient();
 
 
 int main(int argc, char const *argv[]) {
@@ -120,6 +121,10 @@ int main(int argc, char const *argv[]) {
 	rData = NULL;
 
 	return 0;
+}
+
+void sendIQDataToUIClient() {
+	
 }
 
 void test() {
