@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
 
 void printUsage() {
 	printf("Usage:\n");
-    printf("    exe.o -p serverPort");
+    printf("    exe.o -p serverPort\n");
 }
 
 // Get thread id.

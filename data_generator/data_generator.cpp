@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
 
 void printUsage() {
 	printf("Usage:\n");
-	printf("    exe.o -s serverIP -p serverPort");
+	printf("    exe.o -s serverIP -p serverPort\n");
 }
 
 void genData() {
