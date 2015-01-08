@@ -1,6 +1,9 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/socket.h> // for socket(), bind(), and connect().
+#include <arpa/inet.h> // for sockaddr_in and inet_nota().
+#include <unistd.h> // for close().
 #include <string.h>
 #include <map>
 #include <sys/time.h>
@@ -12,21 +15,60 @@ extern "C" {
 
 using namespace std;
 
+#define SERVPORT 5555
+#define SERVIP "192.168.37.229"
+
+// ================== Parameters when using ==================
+struct DATAPROCESSPARAS {
+	// Server.
+	char* serverIP;
+	unsigned short serverPort;
+
+} DataProcessParas;
 
 /* ######################## Method Declare ######################## */
 // ================= In this file. ====================
 // Method Declare.
 void test();
-
+void printUsage();
 void sendIQDataToUIClient();
 
 
-int main(int argc, char const *argv[]) {
+
+int main(int argc, char* argv[]) {
 	
 	//test();
 	//return 0;
+
+	int i = 1;
+
+
+	// Default parameter values.
+	DataProcessParas.serverIP = (char*) "127.0.0.1";
+	DataProcessParas.serverPort = 5555;
+	// Get paramerters from inputing.
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "-s") == 0) {
+			i++;
+			DataProcessParas.serverIP = argv[i];
+		}
+		else if (strcmp(argv[i], "-p") == 0) {
+			i++;
+			DataProcessParas.serverPort = atoi(argv[i]);
+		}
+		else if (strcmp(argv[i], "--help") == 0) {
+			printUsage();
+			return 0;
+		}
+		else {
+
+		}
+	}
+
+
+
 	
-	int i = 0;
+	i = 0;
 
 	/*
 	// Write Data to TIFF.
@@ -120,11 +162,80 @@ int main(int argc, char const *argv[]) {
 	free(rData);
 	rData = NULL;
 
+
+	// Send data.
+	sendIQDataToUIClient();
+
+
 	return 0;
 }
 
+void printUsage() {
+	printf("Usage:\n");
+	printf("    exe.o -s serverIP -p serverPort\n");
+}
+
 void sendIQDataToUIClient() {
-	
+	int sock; // Socket descriptor.
+	struct sockaddr_in servAddr; // Server address.
+
+	unsigned short servPort = DataProcessParas.serverPort;
+	const char* servIP = DataProcessParas.serverIP;
+
+	unsigned int dataSize = 100 * sizeof(int);
+	int* data = (int*) malloc(sizeof(int)*dataSize);
+	memset(data, 0, sizeof(int)*dataSize);
+	int i = 0;
+	for (i = 0; i < dataSize; i++) {
+		data[i] = htonl(i);
+	}
+
+
+	// Create a reliable, stream socket using TCP.
+	if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
+		perror("sendIQDataToUIClient socket() failed.");
+		exit(1);
+	}
+
+	// Construct the server address structure.
+	memset(&servAddr, 0, sizeof(servAddr));
+	servAddr.sin_family = AF_INET; // Internet address family.
+	servAddr.sin_addr.s_addr = inet_addr(servIP); // Server IP address.
+	servAddr.sin_port = htons(servPort); // Server port.
+
+	// Establish the connection to the server.
+	if (connect(sock, (struct sockaddr*) &servAddr, sizeof(servAddr)) < 0) {
+		perror("sendIQDataToUIClient connect() failed.");
+		exit(1);
+	}
+
+	// [
+	// Get client IP:Port and server IP:Port.
+	struct sockaddr_in c, s;
+	//char cIP[20];
+	//char sIP[20];
+	socklen_t cLen = sizeof(c);
+	socklen_t sLen = sizeof(s);
+	getsockname(sock, (struct sockaddr*) &c, &cLen);
+	getpeername(sock, (struct sockaddr*) &s, &sLen);
+	//inet_ntop(AF_INET, &c.sin_addr, cIP, sizeof(cIP));
+	//inet_ntop(AF_INET, &s.sin_addr, sIP, sizeof(sIP));
+	//printf("Client: %s:%d\nServer: %s:%d\n", cIP, ntohs(c.sin_port), sIP, ntohs(s.sin_port));
+	printf("Client: %s:%d\nServer: %s:%d\n", inet_ntoa(c.sin_addr), ntohs(c.sin_port), inet_ntoa(s.sin_addr), ntohs(s.sin_port));
+	// ]
+
+	//while (1) {
+		if (send(sock, (char*) data, dataSize, 0) != dataSize) {
+			perror("sendIQDataToUIClient send() send a different number of bytes than expected");
+			exit(1);
+		}
+
+	//}
+
+	close(sock);
+
+	// exit(0);
+
 }
 
 void test() {

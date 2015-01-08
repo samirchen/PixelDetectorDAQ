@@ -212,15 +212,7 @@ void sendData() {
 	// Keep Sending.
 	//if (send(sock, package, pkgSize, 0) != pkgSize) {
 	//while (1) {
-		// if (send(sock, (char*) Pixel_Matrix, pixelDataSize, 0) != pixelDataSize) {
-		// 	perror("sendData send() send a different number of bytes than expected");
-		// 	exit(1);
-		// }
-
-    	const char* sendStr = "abc";
-    	printf("%lu\n", strlen(sendStr));
-    	if (send(sock, "abc", strlen(sendStr), 0) != strlen(sendStr)) {
-    		const char* ssss = "this is what";
+		if (send(sock, (char*) Pixel_Matrix, pixelDataSize, 0) != pixelDataSize) {
 			perror("sendData send() send a different number of bytes than expected");
 			exit(1);
 		}
