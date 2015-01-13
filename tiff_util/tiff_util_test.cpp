@@ -234,6 +234,9 @@ void sendIQDataToUIClient() {
 
 	close(sock);
 
+	free(data);
+	data = NULL;
+
 	// exit(0);
 
 }
