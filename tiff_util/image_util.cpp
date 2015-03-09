@@ -111,3 +111,63 @@ int countInvalidPixels(const int width, const int height, const long* pixelData)
 
 	return count;
 }
+
+void fixInvalidPixel(const int width, const int height, long* pixelData) {
+	printf("Begin to fix bad pixels.\n");
+	int i = 0;
+
+	// data[height][width] Style. 
+	// long** data = (long**) malloc(sizeof(long*) * height);
+	// for (i = 0; i < height; ++i) {
+	// 	data[i] = (long*) malloc(sizeof(long) * width);
+	// }
+
+
+	int offset = 1;
+
+	int badCount = 0;
+	int size = width * height;
+	for (i = 0; i < size; i++) {
+		int x = i % width;
+		int y = i / width;
+
+		CXPixelValueType type = getPixelValueType(pixelData[i]);
+		if (type == CXPixelValueTypeBad) {
+			badCount++;
+			printf("Get bad pixel %d and its neighbors:\n", badCount);
+
+			long sum = 0;
+			int validNeighborsCount = 0;
+
+			int startX = (x - offset) < 0 ? 0 : (x - offset);
+			int startY = (y - offset) < 0 ? 0 : (y - offset);
+			int endX = (x + offset) > (width - 1) ? (width - 1) : (x + offset);
+			int endY = (y + offset) > (height - 1) ? (height - 1) : (y + offset);
+
+			int m = 0;
+			int n = 0;
+			for (n = startY; n <= endY; ++n) {
+				for (m = startX; m <= endX; ++m) {
+					int index = n * width + m;
+					
+					long value = pixelData[index];
+					printf("%ld ", value);
+
+					if (getPixelValueType(value) == CXPixelValueTypeValid) {
+						sum += value;
+						validNeighborsCount++;
+					}
+
+				}
+				printf("\n");
+			}
+			pixelData[i] = sum / validNeighborsCount;
+
+
+		}
+		else if (type == CXPixelValueTypeGap) {
+
+		}
+	}
+
+}

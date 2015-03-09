@@ -30,6 +30,7 @@ struct DATAPROCESSPARAS {
 // ================= In this file. ====================
 // Method Declare.
 void test();
+void testFixBadPixel();
 void printUsage();
 void sendIQDataToUIClient();
 
@@ -39,6 +40,10 @@ int main(int argc, char* argv[]) {
 	
 	//test();
 	//return 0;
+
+	testFixBadPixel();
+	return 0;
+
 
 	int i = 1;
 
@@ -280,5 +285,45 @@ void test() {
 	fread(buf, sizeof(char), 1024, fp);
 	printf("%s\n", buf);
 	fclose(fp);
+}
+
+void testFixBadPixel() {
+
+	int i = 0;
+
+	int width = 10;
+	int height = 10;
+	int size = width * height;
+	long* data = (long*) malloc(sizeof(long) * size);
+
+	printf("Origin pixels:\n");
+	for (i = 0; i < size; i++) {
+		data[i] = i + 1;
+		if (i % 13 == 0) {
+			data[i] = -3; // bad pixel.
+		}
+
+		printf("%ld ", data[i]);
+		if ((i + 1) % width == 0) {
+			printf("\n");
+		}
+	}
+
+	fixInvalidPixel(width, height, data);
+
+	printf("After fix bad pixels:\n");
+	for (i = 0; i < size; i++) {
+		printf("%ld ", data[i]);
+		if ((i + 1) % width == 0) {
+			printf("\n");
+		}
+	}
+	printf("\n");
+
+	free(data);
 
 }
+
+
+
+
