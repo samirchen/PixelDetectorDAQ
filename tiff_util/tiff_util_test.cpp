@@ -41,8 +41,8 @@ int main(int argc, char* argv[]) {
 	//test();
 	//return 0;
 
-	testFixBadPixel();
-	return 0;
+	//testFixBadPixel();
+	//return 0;
 
 
 	int i = 1;
