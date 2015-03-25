@@ -210,7 +210,7 @@ void* threadReceive(void* arg) {
     getWholeCPUStatus(&ps2);
     getThreadCPUStatus(&pps2, pid, tid);
     float CPUUse = calWholeCPUUse(&ps1, &ps2);
-    float threadCPUUse = calProcessCPUUse(&ps1, &pps1, &ps2, &pps2);
+    float threadCPUUse = calThreadCPUUse(&ps1, &pps1, &ps2, &pps2);
 
     gettimeofday(&t2, NULL);
     timeSpan = (double) (t2.tv_sec-t1.tv_sec) + (double) t2.tv_usec*1e-6 - (double) t1.tv_usec*1e-6;
