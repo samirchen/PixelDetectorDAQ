@@ -386,7 +386,7 @@ void* threadReceiveConnection(void* arg) {
     getWholeCPUStatus(&ps2);
     getThreadCPUStatus(&pps2, pid, tid);
     float CPUUse = calWholeCPUUse(&ps1, &ps2);
-    float threadCPUUse = calProcessCPUUse(&ps1, &pps1, &ps2, &pps2);
+    float threadCPUUse = calThreadCPUUse(&ps1, &pps1, &ps2, &pps2);
     printf("thread %d-%d CPUUse: %f, threadCPUUse: %f\n", pid, tid, CPUUse, threadCPUUse);
 */
 
