@@ -281,7 +281,7 @@ void* threadReceiveConnection(void* arg) {
     printf("File Name: %s\n", fileName);
     fp = fopen(fileName, "a+");
     if (fp == NULL) {
-        perror("threadReceiveConnection fopen() failed");   
+        perror("threadReceiveConnection fopen() failed...");   
         exit(1);
     }
     
