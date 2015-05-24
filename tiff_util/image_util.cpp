@@ -123,7 +123,7 @@ void fixInvalidPixel(const int width, const int height, long* pixelData) {
 	// }
 
 
-	int offset = 1;
+	
 
 	int badCount = 0;
 	int size = width * height;
@@ -132,12 +132,17 @@ void fixInvalidPixel(const int width, const int height, long* pixelData) {
 		int y = i / width;
 
 		CXPixelValueType type = getPixelValueType(pixelData[i]);
-		if (type == CXPixelValueTypeBad) {
+		if (type == CXPixelValueTypeBad || type == CXPixelValueTypeGap) {
 			badCount++;
 			printf("Get bad pixel %d and its neighbors:\n", badCount);
 
 			long sum = 0;
 			int validNeighborsCount = 0;
+
+			// Warning:
+			// offset 这里需要改进，需要讨论在当前 offset 下没完成取均值的情况下 offset 递增到下一个值：√2。
+			// 这里讨论 offset^2 比较好，都是平方和正整数：1，2，5，8，10...
+			int offset = 1; 
 
 			int startX = (x - offset) < 0 ? 0 : (x - offset);
 			int startY = (y - offset) < 0 ? 0 : (y - offset);
@@ -157,16 +162,12 @@ void fixInvalidPixel(const int width, const int height, long* pixelData) {
 						sum += value;
 						validNeighborsCount++;
 					}
-
 				}
 				printf("\n");
 			}
 			pixelData[i] = sum / validNeighborsCount;
-
-
 		}
-		else if (type == CXPixelValueTypeGap) {
-
+		else {
 		}
 	}
 

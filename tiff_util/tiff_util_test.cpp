@@ -31,6 +31,8 @@ struct DATAPROCESSPARAS {
 // Method Declare.
 void test();
 void testFixBadPixel();
+void testWriteTiff();
+void testReadFixWriteTiff();
 void printUsage();
 void sendIQDataToUIClient();
 
@@ -42,6 +44,12 @@ int main(int argc, char* argv[]) {
 	//return 0;
 
 	//testFixBadPixel();
+	//return 0;
+
+	testWriteTiff();
+	return 0;
+
+	//testReadFixWriteTiff();
 	//return 0;
 
 
@@ -75,42 +83,6 @@ int main(int argc, char* argv[]) {
 	
 	i = 0;
 
-	/*
-	// Write Data to TIFF.
-	//// Tiff paras.
-	TiffParas* paras = (TiffParas*) malloc(sizeof(TiffParas)); // Use pointer.
-	memset(paras, 0, sizeof(TiffParas)); // Must not forget to bezero paras.
-	paras->isLittleEndian = 1;
-	paras->version = 0x2A;
-	paras->firstIFDOffset = 0x82;
-	paras->width = 10;
-	paras->height = 10;
-	paras->bitsPerSample = 32;
-	paras->stripOffset = 2048;
-	paras->artist = "artist";
-	paras->datetime = "2014:07:07 22:30:23";
-	paras->model = "model";
-	paras->software = "software";
-	paras->xResolutionA = 1043;
-	paras->xResolutionB = 7;
-	paras->yResolutionA = 1043;
-	paras->yResolutionB = 7;
-	paras->imageDescription = "image description";
-	//// Tiff pixel data.
-	int size = paras->width*paras->height;
-	long* data = (long*) malloc(sizeof(long)*size);
-	memset(data, 0, sizeof(long)*size);
-	for (i = 0; i < size; ++i) {
-		data[i] = 100+i;
-	}
-	//// Prepare and write.
-	prepareAndWrite(paras, data, "sample.tif");
-	//// Clean.
-	free(data);
-	data = NULL;
-	free(paras);
-	paras = NULL;
-	*/
 
 	// Read Data from TIFF.
 	struct timeval t1, t2;
@@ -169,7 +141,7 @@ int main(int argc, char* argv[]) {
 
 
 	// Send data.
-	sendIQDataToUIClient();
+	//sendIQDataToUIClient();
 
 
 	return 0;
@@ -324,6 +296,117 @@ void testFixBadPixel() {
 
 }
 
+void testWriteTiff() {
+	int i = 0;
+	// Write Data to TIFF.
+	//// Tiff paras.
+	TiffParas* paras = (TiffParas*) malloc(sizeof(TiffParas)); // Use pointer.
+	memset(paras, 0, sizeof(TiffParas)); // Must not forget to bezero paras.
+	paras->isLittleEndian = 1;
+	paras->version = 0x2A;
+	paras->firstIFDOffset = 0x82;
+	paras->width = 100;
+	paras->height = 100;
+	paras->bitsPerSample = 32;
+	paras->stripOffset = 2048;
+	paras->artist = "artist";
+	paras->datetime = "2014:07:07 22:30:23";
+	paras->model = "model";
+	paras->software = "software";
+	paras->xResolutionA = 1043;
+	paras->xResolutionB = 7;
+	paras->yResolutionA = 1043;
+	paras->yResolutionB = 7;
+	paras->imageDescription = "image description";
+	//// Tiff pixel data.
+	int size = paras->width*paras->height;
+	long* data = (long*) malloc(sizeof(long)*size);
+	memset(data, 0, sizeof(long)*size);
+	for (i = 0; i < size; ++i) {
+		if (i % 100 == 49 || i / 100 == 32 || i / 100 == 65) {
+			data[i] = -1; // gap pixels.
+		}
+		else if (i % 17 == 0 && i % 19 == 0) {
+			data[i] = -2; // bad pixels.
+		}
+		else {
+			data[i] =  + i;			
+		}
+		
+	}
+
+	//// Prepare and write.
+	prepareAndWrite(paras, data, "sample.tif");
+
+	fixInvalidPixel(paras->width, paras->height, data);
+
+	//// Prepare and write.
+	prepareAndWrite(paras, data, "sample-fix.tif");
+	//// Clean.
+	free(data);
+	data = NULL;
+	free(paras);
+	paras = NULL;
+}
+
+void testReadFixWriteTiff() {
+
+	int i = 0;
+
+	// Read Data from TIFF.
+	struct timeval t1, t2;
+	gettimeofday(&t1, NULL);
+	double timeSpan = 0.0;
+
+	TiffParas rParas; // Not use pointer.
+	memset(&rParas, 0, sizeof(TiffParas)); // Must not forget to bezero paras.
+	readTIFFParas(&rParas, "csclp5.tif");//"../data_acquisitor/127.0.0.1-49654-4.tif");//
+	printf("Image Width: %ld\n", rParas.width);
+	printf("Image Height: %ld\n", rParas.height);
+	printf("Bits Per Sample: %d\n", rParas.bitsPerSample);
+	printf("Strip Offset: %ld\n", rParas.stripOffset);
+	long rSize = rParas.width*rParas.height;
+	long* rData = (long*) malloc(sizeof(long)*rSize);
+	memset(rData, 0, sizeof(long)*rSize);
+	readTIFFPixelsData(&rParas, rData, "csclp5.tif");//"../data_acquisitor/127.0.0.1-49654-4.tif");//
+	long printLimit = rSize > 1000 ? 1000 : rSize;
+	for (i = 0; i < printLimit; i++) {
+		printf("%ld ", rData[i]);
+	}
+	printf("\n");
+
+	
+	// Fix invalid pixel.
+	fixInvalidPixel(rParas.width, rParas.height, rData);
+
+	// Write Data to TIFF.
+	//// Tiff paras.
+	TiffParas* wParas = (TiffParas*) malloc(sizeof(TiffParas)); // Use pointer.
+	memset(wParas, 0, sizeof(TiffParas)); // Must not forget to bezero wParas.
+	wParas->isLittleEndian = 1;
+	wParas->version = 0x2A;
+	wParas->firstIFDOffset = 0x82;
+	wParas->width = rParas.width;
+	wParas->height = rParas.height;
+	wParas->bitsPerSample = 32;
+	wParas->stripOffset = 2048;
+	wParas->artist = "artist";
+	wParas->datetime = "2014:07:07 22:30:23";
+	wParas->model = "model";
+	wParas->software = "software";
+	wParas->xResolutionA = 1043;
+	wParas->xResolutionB = 7;
+	wParas->yResolutionA = 1043;
+	wParas->yResolutionB = 7;
+	wParas->imageDescription = "image description";
+	//// Prepare and write.
+	prepareAndWrite(wParas, rData, "csclp5-fix.tif");
+	//// Clean.
+	free(rData);
+	rData = NULL;
+	free(wParas);
+	wParas = NULL;
 
 
+}
 
