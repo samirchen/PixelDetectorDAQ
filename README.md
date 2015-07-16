@@ -1,5 +1,5 @@
 ##Pixel Detector DAQ
-Developping...
+This project is stopped.
 
 
 ##MIT Licence
